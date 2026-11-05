@@ -3,12 +3,12 @@ import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-if (process.env.WORKERS_CI !== "1") process.exit(0);
-
 const webRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-if (existsSync(resolve(webRoot, ".open-next/worker.js"))) process.exit(0);
+const worker = resolve(webRoot, ".open-next/worker.js");
+if (existsSync(worker)) process.exit(0);
 
-const result = spawnSync("node", ["./scripts/with-env.mjs", "pnpm", "exec", "opennextjs-cloudflare", "build"], {
+const bin = resolve(webRoot, "node_modules/.bin/opennextjs-cloudflare");
+const result = spawnSync("node", ["./scripts/with-env.mjs", bin, "build"], {
   cwd: webRoot,
   env: process.env,
   stdio: "inherit",

@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "dotenv -e ../../.env -e .env.local --override -- next dev --port 3000",
-    "postinstall": "node ./scripts/cf-ci-build.mjs",
     "build": "node ./scripts/with-env.mjs pnpm --filter @gspb-cs/database db:generate && node ./scripts/with-env.mjs pnpm exec next build",
     "build:cf": "node ./scripts/with-env.mjs pnpm exec opennextjs-cloudflare build",
     "start": "next start",
