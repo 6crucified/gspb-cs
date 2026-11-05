@@ -1,0 +1,12 @@
+name = "gspb-cs"
+main = "apps/web/.open-next/worker.js"
+compatibility_date = "2026-10-28"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[assets]
+directory = "apps/web/.open-next/assets"
+binding = "ASSETS"
+
+[observability]
+enabled = true

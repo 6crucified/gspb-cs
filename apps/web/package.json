@@ -4,13 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "dotenv -e ../../.env -e .env.local --override -- next dev --port 3000",
-    "build": "dotenv -e ../../.env -e .env.local --override -- sh -c 'pnpm --filter @gspb-cs/database db:generate && next build'",
-    "build:cf": "dotenv -e ../../.env -e .env.local --override -- opennextjs-cloudflare build",
+    "postinstall": "node ./scripts/cf-ci-build.mjs",
+    "build": "node ./scripts/with-env.mjs pnpm --filter @gspb-cs/database db:generate && node ./scripts/with-env.mjs pnpm exec next build",
+    "build:cf": "node ./scripts/with-env.mjs pnpm exec opennextjs-cloudflare build",
     "start": "next start",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test src/**/*.test.ts",
-    "cf:deploy": "dotenv -e ../../.env -e .env.local --override -- sh -c 'opennextjs-cloudflare build && wrangler deploy'",
+    "cf:deploy": "node ./scripts/with-env.mjs pnpm exec opennextjs-cloudflare build && node ./scripts/with-env.mjs pnpm exec wrangler deploy",
     "cf:dev": "opennextjs-cloudflare build && wrangler dev"
   },
   "dependencies": {
