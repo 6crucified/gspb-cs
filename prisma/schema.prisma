@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountStatus {
+  active
+  suspended
+  deleted
+}
+
+enum SchoolRole {
+  platform_admin
+  school_admin
+  teacher
+  student
+}
+
+enum SignupPolicy {
+  open
+  invite_only
+  admin_only
+}
+
+model UserProfile {
+  id           String        @id @default(uuid())
+  clerkUserId  String        @unique @map("clerk_user_id")
+  displayName  String?       @map("display_name")
+  email        String
+  accountStatus AccountStatus @default(active) @map("account_status")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  memberships SchoolMembership[]
+  processedWebhookEvents ProcessedWebhookEvent[]
+
+  @@index([email])
+  @@map("user_profiles")
+}
+
+model School {
+  id            String       @id @default(uuid())
+  name          String
+  slug          String       @unique
+  signupPolicy  SignupPolicy @default(invite_only) @map("signup_policy")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  memberships SchoolMembership[]
+  invitations SchoolInvitation[]
+
+  @@map("schools")
+}
+
+model SchoolMembership {
+  id        String     @id @default(uuid())
+  userId    String     @map("user_id")
+  schoolId  String     @map("school_id")
+  role      SchoolRole
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  user   UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  school School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, schoolId])
+  @@index([schoolId, role])
+  @@map("school_memberships")
+}
+
+model SchoolInvitation {
+  id         String     @id @default(uuid())
+  schoolId   String     @map("school_id")
+  email      String
+  role       SchoolRole
+  tokenHash  String     @unique @map("token_hash")
+  expiresAt  DateTime   @map("expires_at")
+  acceptedAt DateTime?  @map("accepted_at")
+  createdAt  DateTime   @default(now()) @map("created_at")
+
+  school School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  @@index([schoolId, email])
+  @@map("school_invitations")
+}
+
+model ProcessedWebhookEvent {
+  id        String   @id
+  type      String
+  userId    String?  @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user UserProfile? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("processed_webhook_events")
+}
+
+model PlatformSettings {
+  id           Int          @id @default(1)
+  signupPolicy SignupPolicy @default(invite_only) @map("signup_policy")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
+}

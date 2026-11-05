@@ -1,0 +1,39 @@
+{
+  "name": "@gspb-cs/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "dotenv -e ../../.env -- next dev --port 3000",
+    "build": "pnpm --filter @gspb-cs/database db:generate && next build",
+    "build:cf": "opennextjs-cloudflare build",
+    "start": "next start",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/**/*.test.ts",
+    "cf:deploy": "wrangler deploy",
+    "cf:dev": "opennextjs-cloudflare build && wrangler dev"
+  },
+  "dependencies": {
+    "@clerk/backend": "^2.33.5",
+    "@clerk/nextjs": "^6.39.5",
+    "@gspb-cs/auth": "workspace:*",
+    "@gspb-cs/database": "workspace:*",
+    "@opennextjs/cloudflare": "^1.20.14",
+    "lucide-react": "^0.468.0",
+    "next": "^16.4.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@clerk/types": "^4.86.0",
+    "@tailwindcss/postcss": "^4.1.8",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "dotenv-cli": "^8.0.0",
+    "tailwindcss": "^4.1.8",
+    "tsx": "^4.22.0",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.155.0"
+  }
+}

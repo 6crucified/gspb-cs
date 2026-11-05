@@ -1,0 +1,23 @@
+{
+  "name": "@gspb-cs/database",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "db:generate": "PRISMA_GENERATE_SKIP_AUTOINSTALL=1 prisma generate --schema ../../prisma/schema.prisma",
+    "db:push": "dotenv -e ../../.env -- prisma db push --schema ../../prisma/schema.prisma",
+    "build": "pnpm db:generate",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "dotenv-cli": "^8.0.0",
+    "prisma": "6.19.3",
+    "typescript": "^5.8.3"
+  }
+}
