@@ -1,27 +1,31 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Geist, Geist_Mono } from "next/font/google";
-import { SiteHeader } from "@/components/site-header";
+import { DM_Mono, DM_Sans, Newsreader } from "next/font/google";
+import { SiteFooter } from "@/components/marketing/site-footer";
+import { SiteNav } from "@/components/marketing/site-nav";
 import "./globals.css";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
+const sans = DM_Sans({ subsets: ["latin"], variable: "--font-dm" });
+const mono = DM_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-dm-mono" });
+const display = Newsreader({ subsets: ["latin"], variable: "--font-newsreader" });
 
 export const metadata: Metadata = {
   title: {
-    default: "GSPB CS — Classroom coding platform",
-    template: "%s | GSPB CS",
+    default: "GSPB — The online IDE for your class",
+    template: "%s · GSPB",
   },
-  description: "Browser-based CS classrooms for schools.",
+  description:
+    "A browser IDE for computer science classes. Students join with one link. Pricing is per class, with unlimited students.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
-        <body className="min-h-dvh font-sans antialiased">
-          <SiteHeader />
+      <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable}`}>
+        <body className="min-h-dvh bg-paper font-sans text-ink-soft antialiased">
+          <SiteNav />
           <main>{children}</main>
+          <SiteFooter />
         </body>
       </html>
     </ClerkProvider>
