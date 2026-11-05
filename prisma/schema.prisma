@@ -37,6 +37,8 @@ model UserProfile {
 
   memberships SchoolMembership[]
   processedWebhookEvents ProcessedWebhookEvent[]
+  ownedClassrooms Classroom[] @relation("ClassroomOwner")
+  classroomMembers ClassroomMember[]
 
   @@index([email])
   @@map("user_profiles")
@@ -97,6 +99,37 @@ model ProcessedWebhookEvent {
   user UserProfile? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("processed_webhook_events")
+}
+
+model Classroom {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  ownerId     String   @map("owner_id")
+  joinEnabled Boolean  @default(true) @map("join_enabled")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  owner   UserProfile         @relation("ClassroomOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members ClassroomMember[]
+
+  @@index([ownerId])
+  @@map("classrooms")
+}
+
+model ClassroomMember {
+  id          String     @id @default(uuid())
+  classroomId String     @map("classroom_id")
+  userId      String     @map("user_id")
+  role        SchoolRole
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  classroom Classroom   @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  user      UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([classroomId, userId])
+  @@index([userId])
+  @@map("classroom_members")
 }
 
 model PlatformSettings {

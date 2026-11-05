@@ -21,4 +21,6 @@ export {
   type UserProfile,
   type School,
   type SchoolMembership,
+  type Classroom,
+  type ClassroomMember,
 } from "@prisma/client";

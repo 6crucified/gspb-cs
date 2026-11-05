@@ -5,17 +5,17 @@ import { Mark } from "@/components/marketing/mark";
 import { MobileNav } from "@/components/marketing/mobile-nav";
 
 const signedOut = [
-  { href: "/lessons", label: "Lessons" },
+  { href: "/lessons", label: "Leçons" },
   { href: "/docs", label: "Docs" },
-  { href: "/pricing", label: "Pricing" },
+  { href: "/pricing", label: "Tarifs" },
 ];
 
 const signedIn = [
-  { href: "/workspace", label: "Workspace" },
+  { href: "/workspace", label: "Espace" },
   { href: "/classes", label: "Classes" },
   { href: "/api", label: "API" },
   { href: "/docs", label: "Docs" },
-  { href: "/feedback", label: "Feedback" },
+  { href: "/feedback", label: "Retours" },
 ];
 
 export async function SiteNav() {
@@ -44,10 +44,10 @@ export async function SiteNav() {
           ) : (
             <>
               <Link href="/sign-in" className="hidden rounded-full px-3 py-1.5 text-sm text-ink-soft hover:bg-white/5 sm:inline">
-                Sign in
+                Connexion
               </Link>
               <Link href="/sign-up" className="rounded-full bg-navy px-3.5 py-1.5 text-sm font-medium text-[#1a1a1f]">
-                Get started
+                Commencer
               </Link>
             </>
           )}

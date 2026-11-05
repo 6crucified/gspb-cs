@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@clerk/backend": "^2.33.5",
+    "@clerk/localizations": "^4.24.6",
     "@clerk/nextjs": "^6.39.5",
     "@gspb-cs/auth": "workspace:*",
     "@gspb-cs/database": "workspace:*",

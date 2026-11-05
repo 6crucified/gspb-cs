@@ -5,100 +5,100 @@ import { WorkspacePreview } from "@/components/marketing/workspace-preview";
 
 const setup = [
   {
-    title: "Create a class",
-    body: "Name the section. A second period of the same course is a second class, and that is the unit you pay for.",
+    title: "Créer une classe",
+    body: "Nommez la section. Un second groupe du même cours est une seconde classe, et c'est l'unité facturée.",
   },
   {
-    title: "Add an assignment",
-    body: "Start from a lesson, upload a folder, or write the starter yourself. Publish it when the section should see it.",
+    title: "Ajouter un devoir",
+    body: "Partez d'une leçon, envoyez un dossier, ou écrivez le code de départ. Publiez quand la section doit le voir.",
   },
   {
-    title: "Share the class link",
-    body: "Turn the link on and paste it, or put the code on the projector. New students stop when you turn it off.",
+    title: "Partager le lien",
+    body: "Activez le lien et collez-le, ou affichez le code au tableau. Les nouvelles inscriptions s'arrêtent quand vous le coupez.",
   },
   {
-    title: "Students start coding",
-    body: "Each student gets a workspace with the assignment already in their files.",
+    title: "Les élèves codent",
+    body: "Chaque élève a son espace, avec le devoir déjà dans ses fichiers.",
   },
 ];
 
 const studentFeatures = [
   {
-    title: "Nine languages",
-    body: "Python, Java, C, C++, C#, JavaScript, TypeScript, Go, and PHP, each with Run.",
+    title: "Neuf langages",
+    body: "Python, Java, C, C++, C#, JavaScript, TypeScript, Go et PHP, chacun avec Exécuter.",
   },
   {
     title: "Notebooks",
-    body: "Open a notebook and run cells in the editor.",
+    body: "Ouvrez un notebook et lancez les cellules dans l'éditeur.",
   },
   {
-    title: "Packages stay installed",
-    body: "pip and npm install into that student's files and are still there next class.",
+    title: "Les paquets restent installés",
+    body: "pip et npm s'installent dans les fichiers de l'élève et sont encore là au cours suivant.",
   },
   {
-    title: "Windows beside the code",
-    body: "Turtle, tkinter, and other programs that open a window show up next to the editor.",
+    title: "Fenêtres à côté du code",
+    body: "Turtle, tkinter et les programmes qui ouvrent une fenêtre s'affichent près de l'éditeur.",
   },
   {
-    title: "A public address for a site",
-    body: "A web server a student starts can get an address someone else can open.",
+    title: "Une adresse pour un site",
+    body: "Un serveur lancé par un élève peut recevoir une adresse que quelqu'un d'autre ouvre.",
   },
   {
-    title: "Work follows the login",
-    body: "Files save as they type, on whichever computer they sign in from.",
+    title: "Le travail suit le compte",
+    body: "Les fichiers s'enregistrent en tapant, sur n'importe quel ordinateur où l'élève se connecte.",
   },
 ];
 
 const grading = [
-  { title: "Public and hidden tests", body: "Students run the public tests while they work. The grade adds the hidden ones." },
-  { title: "Release on a date", body: "Write the assignment now. It appears on the day you choose." },
-  { title: "Collected at the deadline", body: "At the due time, every copy is submitted and locked." },
-  { title: "A note on a line", body: "Leave feedback on a specific line of a student's file." },
-  { title: "Weights and overrides", body: "Weight each assignment, or change any score by hand." },
-  { title: "Export", body: "Download the gradebook as a spreadsheet." },
+  { title: "Tests publics et cachés", body: "Les élèves lancent les tests publics. La note ajoute les tests cachés." },
+  { title: "Publication à une date", body: "Écrivez le devoir maintenant. Il apparaît le jour choisi." },
+  { title: "Collecte à l'échéance", body: "À l'heure limite, chaque copie est rendue et verrouillée." },
+  { title: "Une note sur une ligne", body: "Laissez un commentaire sur une ligne précise du fichier." },
+  { title: "Coefficients et corrections", body: "Pondérez chaque devoir, ou modifiez une note à la main." },
+  { title: "Export", body: "Téléchargez le carnet de notes en tableur." },
 ];
 
 const live = [
-  { title: "See who is online", body: "A green dot marks every student working right now." },
-  { title: "Edit together", body: "Open their workspace from the class page. Both cursors show, with names." },
-  { title: "A terminal on their files", body: "You get a shell in the same folder, without walking to the desk." },
-  { title: "Nicknames", body: "Call them what you call them in class. Only teachers see it." },
+  { title: "Voir qui est en ligne", body: "Un point vert marque chaque élève au travail." },
+  { title: "Éditer ensemble", body: "Ouvrez son espace depuis la classe. Les deux curseurs s'affichent, avec les noms." },
+  { title: "Un terminal sur ses fichiers", body: "Vous avez un shell dans le même dossier, sans vous déplacer." },
+  { title: "Surnoms", body: "Appelez-les comme en classe. Seuls les enseignants le voient." },
 ];
 
 const moves = [
-  { title: "Another hosted IDE", body: "Download the starter folder, create a class, and publish it as the first assignment." },
-  { title: "Chromebooks", body: "The workspace is the browser. Students do not install a toolchain on the device." },
-  { title: "A spreadsheet gradebook", body: "Export scores when the term needs them in the system you already use." },
+  { title: "Un autre IDE en ligne", body: "Récupérez le dossier de départ, créez une classe, et publiez-le comme premier devoir." },
+  { title: "Chromebooks", body: "L'espace est le navigateur. Rien à installer sur l'appareil." },
+  { title: "Un carnet dans un tableur", body: "Exportez les notes quand l'établissement les veut dans son outil." },
 ];
 
 const faqs = [
   {
-    q: "What do I pay for?",
-    a: "Classes. A class is one section. Students and extra teachers on that class are included. The first class is free. Each class after that is $9 / month, or $6 / month on the School plan when you run eight or more.",
+    q: "Qu'est-ce qui est facturé ?",
+    a: "Les classes. Une classe est une section. Les élèves et les enseignants supplémentaires sont inclus. La première est gratuite. Ensuite, 9 $ / mois, ou 6 $ / mois au tarif Établissement à partir de huit classes.",
   },
   {
-    q: "How does a teacher account work?",
-    a: "Create an account and open your first class. Students do not need a separate signup link from us. They use the class link you share.",
+    q: "Comment fonctionne un compte enseignant ?",
+    a: "Créez un compte et ouvrez votre première classe. Les élèves utilisent le lien que vous partagez.",
   },
   {
-    q: "What do students need?",
-    a: "A computer with a browser, and an email address to sign in. Nothing is installed on the machine.",
+    q: "De quoi les élèves ont-ils besoin ?",
+    a: "Un ordinateur avec un navigateur, et une adresse pour se connecter. Rien n'est installé sur la machine.",
   },
   {
-    q: "Does it run on Chromebooks?",
-    a: "Yes. Editing, running, and submitting happen in the browser.",
+    q: "Ça marche sur Chromebook ?",
+    a: "Oui. Éditer, exécuter et rendre se font dans le navigateur.",
   },
   {
-    q: "Which languages can I teach?",
-    a: "Python, Java, C, C++, C#, JavaScript, TypeScript, Go, and PHP, plus notebooks and HTML and CSS sites. Autograding can use input and output cases or a test command such as pytest.",
+    q: "Quels langages ?",
+    a: "Python, Java, C, C++, C#, JavaScript, TypeScript, Go et PHP, plus les notebooks et les sites HTML et CSS. La correction automatique accepte des cas d'entrée et de sortie, ou une commande comme pytest.",
   },
   {
-    q: "How big can a class be?",
-    a: "A class holds the section you teach. Headcount is not capped by the price. If a roster needs a higher membership limit, write through Feedback.",
+    q: "Quelle taille pour une classe ?",
+    a: "La classe, c'est la section. Le nombre d'élèves ne change pas le prix. Pour un effectif plus grand, écrivez via Retours.",
   },
   {
-    q: "Does it connect to my LMS?",
-    a: "Not as a live sync. Download the gradebook as a spreadsheet and import it.",
+    q: "Est-ce relié à mon ENT ?",
+    a: "Pas en direct. Téléchargez le carnet de notes et importez-le.",
   },
 ];
 
@@ -112,17 +112,17 @@ export function HomePage() {
       <section className="mx-auto grid max-w-6xl items-center gap-14 px-6 py-16 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:py-24">
         <div>
           <h1 className="font-display text-[3.25rem] leading-[1.02] font-semibold tracking-tight text-ink sm:text-6xl">
-            The online IDE for your class
+            L&apos;IDE en ligne pour votre classe
           </h1>
           <p className="mt-6 max-w-md text-lg leading-relaxed text-ink-soft">
-            Students code in the browser on any computer. Post assignments, follow their progress,
-            and run the section from one place.
+            Les élèves codent dans le navigateur, sur n&apos;importe quel ordinateur. Publiez les
+            devoirs, suivez le travail, et tenez la section depuis un seul endroit.
           </p>
-          <p className="mt-5 text-sm text-muted">Unlimited students in every class. You pay per class.</p>
+          <p className="mt-5 text-sm text-muted">Élèves illimités dans chaque classe. Vous payez par classe.</p>
           <div className="mt-8">
             <HeroCtas />
           </div>
-          <p className="mt-5 text-sm text-muted">The first class is free. Additional classes are billed monthly.</p>
+          <p className="mt-5 text-sm text-muted">La première classe est gratuite. Les suivantes sont facturées au mois.</p>
         </div>
         <WorkspacePreview />
       </section>
@@ -133,19 +133,19 @@ export function HomePage() {
             <div className="absolute top-6 left-4 h-44 w-44 rounded-full bg-[#6e88ad]/35" />
             <div className="absolute top-24 left-16 w-80 rounded-2xl border border-line bg-[#2c3848] p-5 shadow-xl">
               <div className="flex items-start justify-between gap-3">
-                <p className="text-sm text-ink-soft">Algorithms · Block B</p>
+                <p className="text-sm text-ink-soft">Algorithmique · Bloc B</p>
                 <span className="text-muted">×</span>
               </div>
               <p className="mt-16 font-mono text-sm text-white/75">/join/algorithms-block-b</p>
             </div>
           </div>
           <div>
-            <Eyebrow>Setup</Eyebrow>
+            <Eyebrow>Mise en route</Eyebrow>
             <h2 className="mt-3 font-display text-4xl leading-tight font-semibold text-ink sm:text-5xl">
-              Students join with one link
+              Les élèves rejoignent avec un lien
             </h2>
             <p className="mt-4 max-w-md text-ink-soft">
-              There is nothing to install. Students sign in with the email they already use.
+              Rien à installer. Les élèves se connectent avec l&apos;adresse qu&apos;ils ont déjà.
             </p>
             <ol className="mt-8 space-y-6">
               {setup.map((step, index) => (
@@ -166,12 +166,12 @@ export function HomePage() {
 
       <section className="border-t border-line">
         <div className="mx-auto max-w-6xl px-6 py-20">
-          <Eyebrow>For students</Eyebrow>
+          <Eyebrow>Pour les élèves</Eyebrow>
           <h2 className="mt-3 max-w-xl font-display text-4xl leading-tight font-semibold text-ink sm:text-5xl">
-            Students can build the work
+            Les élèves peuvent construire le travail
           </h2>
           <p className="mt-4 max-w-xl text-ink-soft">
-            Each student gets a workspace with an editor, a terminal, and their own files.
+            Chaque élève a un espace : un éditeur, un terminal, et ses propres fichiers.
           </p>
           <ul className="mt-10 grid gap-8 sm:grid-cols-2">
             {studentFeatures.map((item) => (
@@ -186,13 +186,13 @@ export function HomePage() {
 
       <section className="border-t border-line">
         <div className="mx-auto max-w-6xl px-6 py-20">
-          <Eyebrow>Autograding</Eyebrow>
+          <Eyebrow>Correction</Eyebrow>
           <h2 className="mt-3 max-w-2xl font-display text-4xl leading-tight font-semibold text-ink sm:text-5xl">
-            Your tests grade the section
+            Vos tests notent la section
           </h2>
           <p className="mt-4 max-w-2xl text-ink-soft">
-            Write the tests once. At the due time, GSPB collects every student&apos;s work, runs your
-            tests, and puts the scores in the gradebook.
+            Écrivez les tests une fois. À l&apos;échéance, GSPB récupère le travail, lance vos tests,
+            et place les notes dans le carnet.
           </p>
           <ul className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {grading.map((item) => (
@@ -207,12 +207,12 @@ export function HomePage() {
 
       <section className="border-t border-line">
         <div className="mx-auto max-w-6xl px-6 py-20">
-          <Eyebrow>Live help</Eyebrow>
+          <Eyebrow>Aide en direct</Eyebrow>
           <h2 className="mt-3 max-w-2xl font-display text-4xl leading-tight font-semibold text-ink sm:text-5xl">
-            Help a student without walking over
+            Aider un élève sans traverser la salle
           </h2>
           <p className="mt-4 max-w-2xl text-ink-soft">
-            Open a workspace from the class page and edit with them, the way a shared document works.
+            Ouvrez un espace depuis la classe et éditez avec lui, comme un document partagé.
           </p>
           <ul className="mt-10 grid gap-8 sm:grid-cols-2">
             {live.map((item) => (
@@ -228,23 +228,23 @@ export function HomePage() {
       <section className="border-t border-line">
         <div className="mx-auto grid max-w-6xl gap-10 px-6 py-20 lg:grid-cols-2">
           <div>
-            <Eyebrow>A period</Eyebrow>
+            <Eyebrow>Une séance</Eyebrow>
             <h2 className="mt-3 font-display text-4xl leading-tight font-semibold text-ink">
-              From an empty class to a published project
+              D&apos;une classe vide à un projet rendu
             </h2>
           </div>
           <ol className="space-y-6 text-sm leading-relaxed text-ink-soft">
             <li>
-              <span className="font-medium text-ink">You</span> create Block B, pick a lesson as starter
-              code, and publish it with a due time.
+              <span className="font-medium text-ink">Vous</span> créez le Bloc B, choisissez une leçon
+              comme code de départ, et la publiez avec une échéance.
             </li>
             <li>
-              <span className="font-medium text-ink">Students</span> open the join link, run the public
-              tests, and keep their files between bells.
+              <span className="font-medium text-ink">Les élèves</span> ouvrent le lien, lancent les tests
+              publics, et retrouvent leurs fichiers au cours suivant.
             </li>
             <li>
-              <span className="font-medium text-ink">You</span> open the one workspace that is stuck,
-              leave a note on the line, and export the gradebook when the period ends.
+              <span className="font-medium text-ink">Vous</span> ouvrez l&apos;espace bloqué, laissez une
+              note sur la ligne, et exportez le carnet en fin de séance.
             </li>
           </ol>
         </div>
@@ -252,13 +252,13 @@ export function HomePage() {
 
       <section id="pricing" className="border-t border-line">
         <div className="mx-auto max-w-6xl px-6 py-20">
-          <Eyebrow>Pricing</Eyebrow>
+          <Eyebrow>Tarifs</Eyebrow>
           <h2 className="mt-3 max-w-2xl font-display text-4xl leading-tight font-semibold text-ink sm:text-5xl">
-            Priced per class, not per student
+            Facturé par classe, pas par élève
           </h2>
           <p className="mt-4 max-w-2xl text-ink-soft">
-            Thirty students in a section cost the same as twelve. Add a class when you open another
-            section. Drop it when the term ends.
+            Trente élèves dans une section coûtent le même prix que douze. Ajoutez une classe quand
+            vous ouvrez une autre section. Retirez-la en fin de période.
           </p>
           <div className="mt-10">
             <PricingGrid />
@@ -268,9 +268,9 @@ export function HomePage() {
 
       <section className="border-t border-line">
         <div className="mx-auto max-w-6xl px-6 py-20">
-          <h2 className="font-display text-4xl font-semibold text-ink">Moving a class here?</h2>
+          <h2 className="font-display text-4xl font-semibold text-ink">Vous arrivez d&apos;un autre outil ?</h2>
           <p className="mt-4 max-w-2xl text-ink-soft">
-            Bring the folder you already teach from. The guides cover the first week, not a long migration.
+            Apportez le dossier que vous enseignez déjà. Les guides couvrent la première semaine.
           </p>
           <ul className="mt-8 grid gap-4 md:grid-cols-3">
             {moves.map((item) => (
@@ -281,14 +281,14 @@ export function HomePage() {
             ))}
           </ul>
           <Link href="/guides" className="mt-6 inline-block text-sm text-navy hover:underline">
-            Read the guides
+            Lire les guides
           </Link>
         </div>
       </section>
 
       <section className="border-t border-line">
         <div className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="font-display text-4xl font-semibold text-ink">Questions teachers ask</h2>
+          <h2 className="font-display text-4xl font-semibold text-ink">Questions des enseignants</h2>
           <dl className="mt-8 divide-y divide-line border-y border-line">
             {faqs.map((item) => (
               <div key={item.q} className="grid gap-2 py-5 md:grid-cols-[280px_1fr] md:gap-10">
@@ -303,8 +303,8 @@ export function HomePage() {
       <section className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 px-6 py-16 sm:flex-row sm:items-center">
           <div>
-            <h2 className="font-display text-4xl font-semibold text-ink">Set up your first class</h2>
-            <p className="mt-3 text-ink-soft">Free for one section. Add another only when you teach it.</p>
+            <h2 className="font-display text-4xl font-semibold text-ink">Ouvrez votre première classe</h2>
+            <p className="mt-3 text-ink-soft">Gratuite pour une section. Ajoutez-en une autre seulement quand vous l&apos;enseignez.</p>
           </div>
           <HeroCtas />
         </div>

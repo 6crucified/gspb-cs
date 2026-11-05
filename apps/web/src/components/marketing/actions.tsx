@@ -13,13 +13,13 @@ export async function HeroCtas() {
     return (
       <div className="flex flex-wrap gap-3">
         <Link href="/classes" className={primary}>
-          Go to classes
+          Voir les classes
           <span aria-hidden className="ml-2">
             →
           </span>
         </Link>
         <Link href="/#how-it-works" className={secondary}>
-          How it works
+          Comment ça marche
         </Link>
       </div>
     );
@@ -28,13 +28,13 @@ export async function HeroCtas() {
   return (
     <div className="flex flex-wrap gap-3">
       <Link href="/sign-up" className={primary}>
-        Get started
+        Commencer
         <span aria-hidden className="ml-2">
           →
         </span>
       </Link>
       <Link href="/#how-it-works" className={secondary}>
-        How it works
+        Comment ça marche
       </Link>
     </div>
   );
@@ -55,7 +55,7 @@ export async function PlanCta({
   if (userId) {
     return (
       <Link href="/classes" className={className}>
-        Open classes
+        Ouvrir les classes
       </Link>
     );
   }

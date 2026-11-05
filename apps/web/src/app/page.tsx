@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { HomePage } from "@/components/marketing/home-page";
 
 export const metadata: Metadata = {
-  title: "GSPB — The online IDE for your class",
+  title: "GSPB — L'IDE en ligne pour votre classe",
   description:
-    "Students code in the browser. Teachers run the section from one place. Pricing is per class, with unlimited students.",
+    "Les élèves codent dans le navigateur. Le tarif est par classe, avec des élèves illimités.",
 };
 
 export default function Page() {

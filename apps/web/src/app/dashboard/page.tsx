@@ -8,9 +8,9 @@ export default async function DashboardPage() {
   if (!userId) {
     return (
       <div className="mx-auto max-w-2xl px-6 py-16">
-        <p>Unauthorized</p>
+        <p>Non autorisé</p>
         <Link href="/sign-in" className="text-[var(--accent)]">
-          Sign in
+          Connexion
         </Link>
       </div>
     );
@@ -22,10 +22,10 @@ export default async function DashboardPage() {
   } catch {
     return (
       <div className="mx-auto max-w-2xl space-y-4 px-6 py-16">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
+        <h1 className="text-2xl font-semibold">Tableau de bord</h1>
         <p className="text-sm text-[var(--muted)]">
-          Your Clerk session is active, but your application profile is not synced yet. Ensure
-          Clerk webhooks are configured for <code className="text-xs">user.created</code>.
+          La session est active, mais le profil n&apos;est pas encore enregistré. Le webhook Clerk
+          <code className="text-xs"> user.created</code> doit aboutir.
         </p>
       </div>
     );
@@ -36,17 +36,15 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8 px-6 py-12">
       <div>
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="mt-2 text-sm text-[var(--muted)]">
-          Signed in as {user.email}. Clerk ID is stored as the external identity reference.
-        </p>
+        <h1 className="text-2xl font-semibold">Tableau de bord</h1>
+        <p className="mt-2 text-sm text-[var(--muted)]">Connecté en tant que {user.email}.</p>
       </div>
 
       <section className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-6">
-        <h2 className="font-medium">Your schools</h2>
+        <h2 className="font-medium">Vos établissements</h2>
         {memberships.length === 0 ? (
           <p className="mt-3 text-sm text-[var(--muted)]">
-            No school memberships yet. Ask your administrator for an invitation.
+            Aucun établissement pour l&apos;instant. Les classes se créent depuis Classes.
           </p>
         ) : (
           <ul className="mt-4 space-y-2">

@@ -10,3 +10,8 @@ binding = "ASSETS"
 
 [observability]
 enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "gspb-classes"
+database_id = "31553b22-ab9c-4c2e-91c6-53a6e5d6b090"

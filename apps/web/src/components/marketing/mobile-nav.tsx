@@ -36,7 +36,7 @@ export function MobileNav({
           ))}
           {signedIn ? null : (
             <Link href="/sign-in" onClick={() => setOpen(false)} className="text-sm text-ink">
-              Sign in
+              Connexion
             </Link>
           )}
         </nav>
