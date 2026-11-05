@@ -1,4 +1,3 @@
-import type { RequestLike } from "@clerk/nextjs/server";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { processClerkWebhookEvent } from "@gspb-cs/auth";
 import { prisma } from "@gspb-cs/database";
@@ -17,7 +16,7 @@ export async function POST(request: NextRequest) {
 
   let event;
   try {
-    event = await verifyWebhook(request as RequestLike, { signingSecret });
+    event = await verifyWebhook(request, { signingSecret });
   } catch {
     return NextResponse.json({ error: "Invalid webhook signature." }, { status: 400 });
   }
