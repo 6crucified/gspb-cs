@@ -5,6 +5,7 @@ const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/__clerk(.*)",
   "/pricing",
   "/docs(.*)",
   "/lessons",
@@ -44,5 +45,6 @@ export const config = {
     "/((?!.+\\.[\\w]+$|_next).*)",
     "/",
     "/(api|trpc)(.*)",
+    "/__clerk/(.*)",
   ],
 };

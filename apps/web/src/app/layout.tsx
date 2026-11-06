@@ -21,7 +21,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider localization={frFR}>
+    <ClerkProvider
+      localization={frFR}
+      proxyUrl={process.env.NEXT_PUBLIC_CLERK_PROXY_URL || "https://gspb-cs.askr.workers.dev/__clerk"}
+      signInFallbackRedirectUrl="/classes"
+      signUpFallbackRedirectUrl="/classes"
+    >
       <html lang="fr" className={`${sans.variable} ${mono.variable} ${display.variable}`}>
         <body className="min-h-dvh bg-paper font-sans text-ink-soft antialiased">
           <SiteNav />
