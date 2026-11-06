@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { frFR } from "@clerk/localizations";
 import { DM_Mono, DM_Sans, Newsreader } from "next/font/google";
-import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteNav } from "@/components/marketing/site-nav";
+import { SiteFrame } from "@/components/site-frame";
+import { clerkLocalization } from "@/lib/clerk-localization";
 import "./globals.css";
 
 const sans = DM_Sans({ subsets: ["latin"], variable: "--font-dm" });
@@ -22,16 +22,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
-      localization={frFR}
-      proxyUrl={process.env.NEXT_PUBLIC_CLERK_PROXY_URL || "https://gspb-cs.askr.workers.dev/__clerk"}
+      localization={clerkLocalization}
       signInFallbackRedirectUrl="/classes"
       signUpFallbackRedirectUrl="/classes"
     >
       <html lang="fr" className={`${sans.variable} ${mono.variable} ${display.variable}`}>
         <body className="min-h-dvh bg-paper font-sans text-ink-soft antialiased">
           <SiteNav />
-          <main>{children}</main>
-          <SiteFooter />
+          <SiteFrame>{children}</SiteFrame>
         </body>
       </html>
     </ClerkProvider>

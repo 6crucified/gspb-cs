@@ -1,0 +1,19 @@
+name = "gspb-runner"
+main = "src/index.ts"
+compatibility_date = "2026-10-28"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[[containers]]
+class_name = "StudentBox"
+image = "./Dockerfile"
+instance_type = "lite"
+max_instances = 20
+
+[[durable_objects.bindings]]
+name = "STUDENT_BOX"
+class_name = "StudentBox"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["StudentBox"]

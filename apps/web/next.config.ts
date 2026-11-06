@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: workspaceRoot,
   serverExternalPackages: ["@prisma/client"],
   transpilePackages: ["@gspb-cs/auth", "@gspb-cs/database"],
+  experimental: {
+    proxyClientMaxBodySize: "20mb",
+    serverActions: {
+      bodySizeLimit: "20mb",
+    },
+  },
 };
 
 export default nextConfig;

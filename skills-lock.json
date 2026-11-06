@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "fern-docs": {
+      "source": "fern-api/skills",
+      "sourceType": "github",
+      "skillPath": "skills/fern-docs/SKILL.md",
+      "computedHash": "bbff53314f0e63b612496db59f65495c47bc6c095eb0645607cef79da5400dc4"
+    }
+  }
+}

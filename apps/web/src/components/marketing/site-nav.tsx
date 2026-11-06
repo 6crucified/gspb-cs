@@ -1,5 +1,6 @@
-import { UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
+"use client";
+
+import { UserButton, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { Mark } from "@/components/marketing/mark";
 import { MobileNav } from "@/components/marketing/mobile-nav";
@@ -18,9 +19,9 @@ const signedIn = [
   { href: "/feedback", label: "Retours" },
 ];
 
-export async function SiteNav() {
-  const { userId } = await auth();
-  const items = userId ? signedIn : signedOut;
+export function SiteNav() {
+  const { isLoaded, isSignedIn } = useAuth();
+  const items = isSignedIn ? signedIn : signedOut;
 
   return (
     <header className="sticky top-0 z-40 border-b border-line/80 bg-paper/90 backdrop-blur">
@@ -39,9 +40,10 @@ export async function SiteNav() {
           </nav>
         </div>
         <div className="flex items-center gap-2">
-          {userId ? (
+          {isLoaded && isSignedIn ? (
             <UserButton afterSignOutUrl="/" />
-          ) : (
+          ) : null}
+          {isLoaded && !isSignedIn ? (
             <>
               <Link href="/sign-in" className="hidden rounded-full px-3 py-1.5 text-sm text-ink-soft hover:bg-white/5 sm:inline">
                 Connexion
@@ -50,8 +52,8 @@ export async function SiteNav() {
                 Commencer
               </Link>
             </>
-          )}
-          <MobileNav items={items} signedIn={Boolean(userId)} />
+          ) : null}
+          <MobileNav items={items} signedIn={Boolean(isSignedIn)} />
         </div>
       </div>
     </header>

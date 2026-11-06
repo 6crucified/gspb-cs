@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
+import { summarizeClassrooms } from "@/lib/assignments";
+import { formatDueDate } from "@/lib/assignment-files";
 import { listClassrooms } from "@/lib/classrooms";
 
 export const metadata: Metadata = {
@@ -11,6 +13,7 @@ export const metadata: Metadata = {
 export default async function ClassesPage() {
   const { userId } = await auth();
   const classes = userId ? await listClassrooms(userId) : [];
+  const summaries = userId ? await summarizeClassrooms(classes.map((classroom: { id: string }) => classroom.id)) : new Map();
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
@@ -50,17 +53,35 @@ export default async function ClassesPage() {
           )}
         </div>
       ) : (
-        <ul className="mt-10 divide-y divide-line border-y border-line">
-          {classes.map((classroom: { id: string; name: string; slug: string }) => (
-            <li key={classroom.id}>
-              <Link href={`/classes/${classroom.id}`} className="flex items-center justify-between py-4">
-                <span className="font-medium text-ink">{classroom.name}</span>
-                <span className="font-mono text-xs text-muted">/join/{classroom.slug}</span>
-              </Link>
-            </li>
-          ))}
+        <ul className="mt-10 space-y-3">
+          {classes.map((classroom: { id: string; name: string }) => {
+            const summary = summaries.get(classroom.id) ?? { total: 0, nextDue: null };
+            return (
+              <li key={classroom.id}>
+                <Link
+                  href={`/classes/${classroom.id}`}
+                  className="flex items-center justify-between rounded-2xl border border-line bg-paper-elevated px-5 py-4 hover:border-navy/50"
+                >
+                  <span>
+                    <span className="block font-medium text-ink">{classroom.name}</span>
+                    <span className="mt-1 block text-sm text-muted">{classSummary(summary.total, summary.nextDue)}</span>
+                  </span>
+                  <span className="text-muted" aria-hidden>
+                    ›
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
   );
+}
+
+function classSummary(total: number, nextDue: string | null) {
+  if (total === 0) return "Aucun devoir";
+  const count = total > 1 ? `${total} devoirs` : "1 devoir";
+  if (!nextDue) return `${count} · Rien à rendre`;
+  return `${count} · pour le ${formatDueDate(nextDue)}`;
 }

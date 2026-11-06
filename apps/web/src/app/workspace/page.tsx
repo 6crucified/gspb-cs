@@ -1,13 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { WorkspacePreview } from "@/components/marketing/workspace-preview";
+import { listClassrooms } from "@/lib/classrooms";
 
 export const metadata: Metadata = {
   title: "Espace",
   description: "L'éditeur, le terminal et les fichiers d'une classe GSPB.",
 };
 
-export default function WorkspacePage() {
+export default async function WorkspacePage() {
+  const { userId } = await auth();
+  if (userId) {
+    const classes = await listClassrooms(userId);
+    if (classes[0]) redirect(`/classes/${classes[0].id}/espace`);
+  }
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-16">
       <div className="flex flex-wrap items-end justify-between gap-4">

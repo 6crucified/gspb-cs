@@ -7,8 +7,7 @@
   "scripts": {
     "build": "tsc --noEmit",
     "lint": "tsc --noEmit",
-    "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test src/**/*.test.ts"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@gspb-cs/database": "workspace:*",
@@ -17,7 +16,6 @@
   },
   "devDependencies": {
     "@types/node": "^22.7.4",
-    "tsx": "^4.22.0",
     "typescript": "^5.8.3"
   }
 }

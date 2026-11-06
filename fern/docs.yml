@@ -1,0 +1,9 @@
+instances:
+  - url: https://gspb-cs.docs.buildwithfern.com
+title: Gspb Cs | Documentation
+navigation:
+  - page: Welcome
+    path: pages/welcome.mdx
+colors:
+  accentPrimary: '#ffffff'
+  background: '#000000'
