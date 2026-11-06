@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type MouseEvent, type MutableRefObject } from "react";
 import { useRouter } from "next/navigation";
-import { File, FileCode, FileJson, FileText, Folder, Plus } from "lucide-react";
+import { File, FileCode, FileJson, FileText, Folder, Plus, Terminal, Upload, X } from "lucide-react";
 import { fileHasTests, isSafeWorkspacePath } from "@/lib/workspace-path";
 import type { WorkspaceFile, WorkspaceRun } from "@/lib/workspace";
 
@@ -100,8 +100,8 @@ function Tree({
               onClick={() => onOpen(entry.path!)}
               className={
                 entry.path === active
-                  ? "flex w-full items-center gap-1.5 rounded bg-white/10 px-2 py-1 text-left text-[13px] text-ink"
-                  : "flex w-full items-center gap-1.5 rounded px-2 py-1 text-left text-[13px] text-muted hover:bg-white/8 hover:text-ink"
+                  ? "flex w-full items-center gap-2 rounded-lg border border-navy/30 bg-navy/10 px-2 py-1.5 text-left text-[13px] text-ink shadow-sm"
+                  : "flex w-full items-center gap-2 rounded-lg border border-transparent px-2 py-1.5 text-left text-[13px] text-muted hover:border-line hover:bg-paper/80 hover:text-ink"
               }
               style={{ paddingLeft: 8 + depth * 14 }}
             >
@@ -127,8 +127,8 @@ function Tree({
                 }}
                 className={
                   dropTarget === entry.folderPath
-                    ? "flex cursor-grab items-center gap-1.5 rounded bg-[#3d9a62]/25 py-1 text-[13px] text-ink"
-                    : "flex cursor-grab items-center gap-1.5 py-1 text-[13px] text-ink-soft"
+                    ? "flex cursor-grab items-center gap-2 rounded-lg border border-forest/40 bg-forest/15 py-1.5 text-[13px] text-ink"
+                    : "flex cursor-grab items-center gap-2 rounded-lg border border-transparent py-1.5 text-[13px] text-muted hover:border-line hover:bg-paper/60 hover:text-ink-soft"
                 }
                 style={{ paddingLeft: 8 + depth * 14 }}
               >
@@ -386,11 +386,21 @@ export function Ide({
 
   return (
     <>
-    <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_14rem] bg-[#161513]">
-      <div className="grid min-h-0 grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="flex min-h-0 flex-col border-r border-white/10 bg-[#191a24]">
+    <div
+      className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_minmax(10.5rem,32vh)] bg-paper text-ink"
+      style={{
+        backgroundImage:
+          "radial-gradient(ellipse 120% 80% at 0% -20%, rgba(169, 197, 227, 0.07), transparent 50%), radial-gradient(ellipse 80% 50% at 100% 100%, rgba(114, 192, 150, 0.05), transparent 45%)",
+      }}
+    >
+      <div className="grid min-h-0 grid-cols-[minmax(13rem,17.5rem)_minmax(0,1fr)] gap-0 p-2 sm:p-3">
+        <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-line bg-paper-elevated/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm">
+          <div className="border-b border-line px-3 pb-2 pt-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">Explorateur</p>
+            <p className="mt-0.5 truncate text-xs text-ink-soft">Projet</p>
+          </div>
           {isTeacher ? (
-            <label className="border-b border-white/10 px-3 py-2 text-[11px] tracking-wide text-muted uppercase">
+            <label className="border-b border-line px-3 py-3 text-[11px] font-medium uppercase tracking-wide text-muted">
               Élève
               <select
                 value={readOnly ? ownerId : ""}
@@ -398,7 +408,7 @@ export function Ide({
                   const value = event.target.value;
                   router.push(value ? `/classes/${classroomId}/espace?eleve=${value}` : `/classes/${classroomId}/espace`);
                 }}
-                className="mt-1 w-full rounded-md border border-white/10 bg-black/40 px-2 py-1.5 text-xs tracking-normal text-ink normal-case outline-none"
+                className="mt-1.5 w-full rounded-lg border border-line bg-paper px-2.5 py-2 text-xs font-normal normal-case tracking-normal text-ink shadow-sm outline-none transition hover:border-navy/40 focus:border-navy focus:ring-1 focus:ring-navy/30"
               >
                 <option value="">Mon espace</option>
                 {students.map((student) => (
@@ -409,28 +419,51 @@ export function Ide({
               </select>
             </label>
           ) : null}
-          <div className="flex items-center justify-between px-2 py-2">
-            <span className="text-[11px] tracking-wide text-muted uppercase">Fichiers</span>
+          <div className="flex items-center justify-between gap-2 px-2 py-2">
+            <span className="shrink-0 pl-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">Fichiers</span>
             {readOnly ? null : (
-              <span className="relative flex gap-1">
-                <button type="button" onClick={() => uploadRef.current?.click()} className="rounded px-2 py-1 text-xs text-muted hover:bg-white/10 hover:text-ink">
-                  Importer
+              <span className="relative flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => uploadRef.current?.click()}
+                  title="Importer des fichiers"
+                  className="inline-flex items-center gap-1 rounded-lg border border-transparent px-2 py-1.5 text-[11px] text-muted transition hover:border-line hover:bg-paper hover:text-ink"
+                >
+                  <Upload className="h-3.5 w-3.5" aria-hidden />
+                  <span className="hidden sm:inline">Importer</span>
                 </button>
                 <button
                   type="button"
                   aria-expanded={menu}
                   onClick={() => setMenu((open) => !open)}
-                  className="flex items-center gap-1 rounded-md border border-white/15 px-2 py-1 text-xs text-ink hover:bg-white/10"
+                  className="inline-flex items-center gap-1 rounded-lg border border-line bg-paper px-2 py-1.5 text-[11px] font-medium text-ink shadow-sm transition hover:border-navy/35 hover:bg-paper-elevated"
                 >
-                  <Plus className="h-3.5 w-3.5" /> Nouveau
+                  <Plus className="h-3.5 w-3.5" aria-hidden />
+                  Nouveau
                 </button>
                 {menu ? (
-                  <div className="absolute top-8 right-0 z-10 w-36 rounded-lg border border-white/10 bg-[#232433] p-1 shadow-xl">
-                    <button type="button" onClick={() => { setMenu(false); setCreating("file"); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-ink hover:bg-white/10">
-                      <File className="h-3.5 w-3.5" /> Fichier
+                  <div className="absolute right-0 top-9 z-10 w-40 rounded-xl border border-line bg-paper-elevated p-1 shadow-xl ring-1 ring-black/20">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenu(false);
+                        setCreating("file");
+                      }}
+                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-ink hover:bg-white/5"
+                    >
+                      <File className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                      Fichier
                     </button>
-                    <button type="button" onClick={() => { setMenu(false); setCreating("folder"); }} className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm text-ink hover:bg-white/10">
-                      <Folder className="h-3.5 w-3.5 text-[#c4b58a]" /> Dossier
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenu(false);
+                        setCreating("folder");
+                      }}
+                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-ink hover:bg-white/5"
+                    >
+                      <Folder className="h-3.5 w-3.5 shrink-0 text-[#c9b896]" aria-hidden />
+                      Dossier
                     </button>
                   </div>
                 ) : null}
@@ -448,7 +481,7 @@ export function Ide({
             )}
           </div>
           <div
-            className="min-h-0 flex-1 overflow-auto px-1"
+            className="min-h-0 flex-1 overflow-auto px-2 pb-2"
             onDragOver={(event) => {
               event.preventDefault();
               setDropTarget("");
@@ -471,7 +504,7 @@ export function Ide({
           </div>
           {creating ? (
             <form
-              className="border-t border-white/10 p-2"
+              className="border-t border-line bg-paper/50 p-2.5"
               onSubmit={(event) => {
                 event.preventDefault();
                 add(creating);
@@ -483,33 +516,65 @@ export function Ide({
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder={creating === "folder" ? "dossier" : "dossier/fichier.py"}
                 aria-label={creating === "folder" ? "Nom du dossier" : "Nom du fichier"}
-                className="w-full rounded-md border border-white/10 bg-black/40 px-2 py-1.5 font-mono text-xs text-ink outline-none focus:border-[#7c6af7]"
+                className="w-full rounded-lg border border-line bg-paper px-2.5 py-2 font-mono text-xs text-ink outline-none transition focus:border-navy focus:ring-1 focus:ring-navy/25"
               />
-              {draftError ? <p className="mt-1 text-[11px] text-tomato">{draftError}</p> : null}
+              {draftError ? <p className="mt-1.5 text-[11px] text-tomato">{draftError}</p> : null}
             </form>
           ) : null}
         </aside>
-        <section className="flex min-h-0 min-w-0 flex-col bg-[#232433]">
-          <div className="flex items-center gap-2 border-b border-white/10 pr-2">
-            <div className="flex min-w-0 flex-1 overflow-auto">
-              {open.map((path) => (
+
+        <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-paper-elevated/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm">
+          <header className="flex flex-wrap items-center gap-2 border-b border-line bg-gradient-to-b from-paper-elevated to-paper/80 px-3 py-2 sm:px-4">
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate text-sm font-semibold tracking-tight text-ink">Éditeur</h2>
+              <p className="truncate font-mono text-[11px] text-muted">{current?.path ?? "main.py"}</p>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => launch(false)}
+                disabled={readOnly || !current}
+                className="inline-flex items-center gap-1.5 rounded-full border border-forest/40 bg-forest/20 px-3.5 py-1.5 text-sm font-medium text-ink transition hover:bg-forest/30 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <PlayIcon aria-hidden />
+                Exécuter
+              </button>
+              {tests ? (
+                <button
+                  type="button"
+                  onClick={() => launch(true)}
+                  disabled={readOnly || !current}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-navy/45 bg-navy/15 px-3.5 py-1.5 text-sm font-medium text-ink transition hover:bg-navy/25 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <TestsIcon aria-hidden />
+                  Tests
+                </button>
+              ) : null}
+            </div>
+          </header>
+          <div className="flex min-h-0 min-w-0 shrink-0 items-center gap-1 overflow-x-auto border-b border-line bg-paper/40 px-1 py-1">
+            {open.map((path) => {
+              const fileName = path.split("/").pop() ?? path;
+              const isActive = path === current?.path;
+              return (
                 <button
                   key={path}
                   type="button"
                   onContextMenu={(event) => openContext(event, "file", path)}
                   onClick={() => setActive(path)}
                   className={
-                    path === current?.path
-                      ? "flex shrink-0 items-center gap-2 border-r border-white/10 bg-[#2a2b3d] px-3 py-2 text-[13px] text-ink"
-                      : "flex shrink-0 items-center gap-2 border-r border-white/10 px-3 py-2 text-[13px] text-muted"
+                    isActive
+                      ? "group inline-flex max-w-[11rem] shrink-0 items-center gap-1.5 rounded-lg border border-navy/35 bg-navy/12 px-2.5 py-1.5 text-left text-[13px] text-ink shadow-sm"
+                      : "group inline-flex max-w-[11rem] shrink-0 items-center gap-1.5 rounded-lg border border-transparent px-2.5 py-1.5 text-left text-[13px] text-muted hover:border-line hover:bg-white/5 hover:text-ink"
                   }
                 >
-                  <FileIcon name={path.split("/").pop() ?? path} />
-                  {path.split("/").pop()}
+                  <FileIcon name={fileName} />
+                  <span className="min-w-0 flex-1 truncate">{fileName}</span>
                   <span
                     role="button"
+                    tabIndex={0}
                     aria-label={`Fermer ${path}`}
-                    className="text-muted hover:text-ink"
+                    className="shrink-0 rounded p-0.5 text-muted opacity-70 transition hover:bg-white/10 hover:text-ink group-hover:opacity-100"
                     onClick={(event) => {
                       event.stopPropagation();
                       setOpen((tabs) => {
@@ -518,26 +583,34 @@ export function Ide({
                         return next.length ? next : [files[0]?.path ?? path];
                       });
                     }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setOpen((tabs) => {
+                          const next = tabs.filter((tab) => tab !== path);
+                          if (path === active) setActive(next[0] ?? files[0]?.path ?? "");
+                          return next.length ? next : [files[0]?.path ?? path];
+                        });
+                      }
+                    }}
                   >
-                    ×
+                    <X className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
                   </span>
                 </button>
-              ))}
-            </div>
-            <button type="button" onClick={() => launch(false)} disabled={readOnly || !current} className="inline-flex items-center gap-1.5 rounded-full bg-[#3d9a62] px-3 py-1 text-sm font-medium text-white disabled:opacity-40">
-              <PlayIcon /> Lancer
-            </button>
-            {tests ? (
-              <button type="button" onClick={() => launch(true)} disabled={readOnly || !current} className="inline-flex items-center gap-1.5 rounded-full bg-[#6d5efc] px-3 py-1 text-sm font-medium text-white disabled:opacity-40">
-                <TestsIcon /> Lancer les tests
-              </button>
-            ) : null}
+              );
+            })}
           </div>
           <CodePane path={current?.path ?? "main.py"} text={current?.text ?? ""} readOnly={readOnly} onChange={update} />
         </section>
       </div>
-      <section className="flex min-h-0 flex-col border-t border-white/10 bg-[#141311]">
-        <div className="flex items-stretch border-b border-white/10 bg-[#1a1916]">
+
+      <section className="mx-2 mb-2 flex min-h-0 flex-col overflow-hidden rounded-xl border border-line bg-[#141311] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:mx-3 sm:mb-3">
+        <div className="flex items-center gap-2 border-b border-line/80 bg-[#1a1815] px-3 py-1.5">
+          <Terminal className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
+          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">Console</span>
+        </div>
+        <div className="flex items-stretch border-b border-line/80 bg-[#161412]">
           {terms.map((id) => (
             <button
               key={id}
@@ -545,29 +618,44 @@ export function Ide({
               onClick={() => setActiveTerm(id)}
               className={
                 id === activeTerm
-                  ? "flex items-center gap-1.5 border-b-2 border-[#e0b15a] bg-[#221f1b] px-3 py-1.5 text-xs text-ink"
-                  : "flex items-center gap-1.5 border-b-2 border-transparent px-3 py-1.5 text-xs text-muted hover:text-ink"
+                  ? "flex min-h-9 items-center gap-1.5 border-b-2 border-navy bg-[#1c1a17] px-3 py-2 text-xs font-medium text-ink"
+                  : "flex min-h-9 items-center gap-1.5 border-b-2 border-transparent px-3 py-2 text-xs text-muted hover:bg-white/[0.04] hover:text-ink-soft"
               }
             >
-              <PromptIcon /> Terminal {id}
+              <PromptIcon aria-hidden />
+              {id}
               {terms.length > 1 ? (
                 <span
                   role="button"
+                  tabIndex={0}
                   aria-label={`Fermer le terminal ${id}`}
-                  className="ml-1 text-muted hover:text-ink"
+                  className="ml-0.5 rounded p-0.5 text-muted hover:bg-white/10 hover:text-ink"
                   onClick={(event) => {
                     event.stopPropagation();
                     setTerms((currentTerms) => currentTerms.filter((term) => term !== id));
                     setActiveTerm((currentId) => (currentId === id ? terms.find((term) => term !== id) ?? "1" : currentId));
                   }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      setTerms((currentTerms) => currentTerms.filter((term) => term !== id));
+                      setActiveTerm((currentId) => (currentId === id ? terms.find((term) => term !== id) ?? "1" : currentId));
+                    }
+                  }}
                 >
-                  ×
+                  <X className="h-3 w-3" strokeWidth={2.5} aria-hidden />
                 </span>
               ) : null}
             </button>
           ))}
           {terms.length < 3 ? (
-            <button type="button" aria-label="Nouveau terminal" onClick={addTerminal} className="px-3 text-sm text-muted hover:text-ink">
+            <button
+              type="button"
+              aria-label="Nouveau terminal"
+              onClick={addTerminal}
+              className="px-2.5 text-lg font-light leading-none text-muted hover:text-ink"
+            >
               +
             </button>
           ) : null}
@@ -596,18 +684,18 @@ export function Ide({
         <div className="fixed inset-0 z-50" onMouseDown={() => setContextMenu(null)} onContextMenu={(event) => event.preventDefault()}>
           <div
             role="menu"
-            className="absolute w-52 rounded-lg border border-white/10 bg-[#232433] p-1 shadow-2xl"
+            className="absolute w-52 rounded-xl border border-line bg-paper-elevated p-1.5 shadow-2xl ring-1 ring-black/25"
             style={{ left: contextMenu.x, top: contextMenu.y }}
             onMouseDown={(event) => event.stopPropagation()}
           >
             {contextMenu.kind === "file" ? (
-              <button type="button" className="block w-full rounded px-3 py-1.5 text-left text-sm text-ink hover:bg-white/10" onClick={() => { openFile(contextMenu.path); setContextMenu(null); }}>
+              <button type="button" className="block w-full rounded-lg px-3 py-2 text-left text-sm text-ink hover:bg-white/8" onClick={() => { openFile(contextMenu.path); setContextMenu(null); }}>
                 Ouvrir
               </button>
             ) : (
               <button
                 type="button"
-                className="block w-full rounded px-3 py-1.5 text-left text-sm text-ink hover:bg-white/10"
+                className="block w-full rounded-lg px-3 py-2 text-left text-sm text-ink hover:bg-white/8"
                 onClick={() => {
                   setCreating("file");
                   setDraft(`${contextMenu.path}/`);
@@ -619,7 +707,7 @@ export function Ide({
             )}
             <button
               type="button"
-              className="block w-full rounded px-3 py-1.5 text-left text-sm text-ink hover:bg-white/10"
+              className="block w-full rounded-lg px-3 py-2 text-left text-sm text-ink hover:bg-white/8"
               onClick={() => {
                 setRenameTarget({ kind: contextMenu.kind, path: contextMenu.path });
                 setRenameValue(contextMenu.path.split("/").pop() ?? "");
@@ -630,13 +718,13 @@ export function Ide({
               Renommer
             </button>
             {contextMenu.kind === "file" ? (
-              <button type="button" className="block w-full rounded px-3 py-1.5 text-left text-sm text-ink hover:bg-white/10" onClick={() => duplicateFile(contextMenu.path)}>
+              <button type="button" className="block w-full rounded-lg px-3 py-2 text-left text-sm text-ink hover:bg-white/8" onClick={() => duplicateFile(contextMenu.path)}>
                 Dupliquer
               </button>
             ) : null}
             <button
               type="button"
-              className="block w-full rounded px-3 py-1.5 text-left text-sm text-ink hover:bg-white/10"
+              className="block w-full rounded-lg px-3 py-2 text-left text-sm text-ink hover:bg-white/8"
               onClick={() => {
                 void navigator.clipboard.writeText(contextMenu.path);
                 setContextMenu(null);
@@ -644,8 +732,8 @@ export function Ide({
             >
               Copier le chemin
             </button>
-            <div className="my-1 h-px bg-white/10" />
-            <button type="button" className="block w-full rounded px-3 py-1.5 text-left text-sm text-tomato hover:bg-white/10" onClick={() => deleteEntry(contextMenu.path, contextMenu.kind)}>
+            <div className="my-1.5 h-px bg-line" />
+            <button type="button" className="block w-full rounded-lg px-3 py-2 text-left text-sm text-tomato hover:bg-tomato/10" onClick={() => deleteEntry(contextMenu.path, contextMenu.kind)}>
               Supprimer
             </button>
           </div>
@@ -654,7 +742,7 @@ export function Ide({
       {renameTarget ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
           <form
-            className="w-full max-w-md rounded-2xl border border-line bg-[#232433] p-6"
+            className="w-full max-w-md rounded-2xl border border-line bg-paper-elevated p-6 shadow-2xl"
             onSubmit={(event) => {
               event.preventDefault();
               commitRename();
@@ -665,7 +753,7 @@ export function Ide({
               autoFocus
               value={renameValue}
               onChange={(event) => setRenameValue(event.target.value)}
-              className="mt-4 w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 font-mono text-sm text-ink outline-none focus:border-[#7c6af7]"
+              className="mt-4 w-full rounded-lg border border-line bg-paper px-3 py-2 font-mono text-sm text-ink outline-none focus:border-navy focus:ring-1 focus:ring-navy/25"
             />
             {renameError ? <p className="mt-2 text-sm text-tomato">{renameError}</p> : null}
             <div className="mt-5 flex justify-end gap-2">
@@ -723,7 +811,7 @@ function TerminalView({
         disableStdin: readOnly,
         fontFamily: "var(--font-dm-mono), ui-monospace, monospace",
         fontSize: 13,
-        theme: { background: "#141311", foreground: "#f2eee5", cursor: "#f2eee5" },
+        theme: { background: "#141311", foreground: "#f2eee5", cursor: "#a9c5e3" },
       });
       const fit = new FitAddon();
       instance.loadAddon(fit);
@@ -799,9 +887,10 @@ function CodePane({
             language,
             EditorView.editable.of(!readOnly),
             EditorView.theme({
-              "&": { height: "100%", fontSize: "13px", backgroundColor: "#232433" },
+              "&": { height: "100%", fontSize: "13px", backgroundColor: "#25231f" },
               ".cm-scroller": { fontFamily: "var(--font-dm-mono), ui-monospace, monospace" },
-              ".cm-gutters": { backgroundColor: "#232433", border: "none" },
+              ".cm-gutters": { backgroundColor: "#25231f", border: "none", color: "#a8a398" },
+              ".cm-activeLineGutter": { backgroundColor: "rgba(169, 197, 227, 0.08)" },
             }),
             EditorView.updateListener.of((update) => {
               if (update.docChanged) onChangeRef.current(update.state.doc.toString());
