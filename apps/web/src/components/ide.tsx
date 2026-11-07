@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type MouseEvent, type MutableRefObject } from "react";
+import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { File, FileCode, FileJson, FileText, Folder, Plus, Terminal, Upload, X } from "lucide-react";
 import { editorLanguageLabel, IdeWorkbenchChrome } from "@/components/ide-workbench-chrome";
+import { useTeacherPresenceBeacon, useTeacherWatchingStudent } from "@/hooks/use-workspace-presence";
 import { createTerminalSession, terminalWrite } from "@/lib/terminal-io";
 import { fileHasTests, isSafeWorkspacePath } from "@/lib/workspace-path";
 import type { WorkspaceFile, WorkspaceRun } from "@/lib/workspace";
@@ -200,10 +202,36 @@ export function Ide({
   filesRef.current = files;
   const managedStudent = students.find((student) => student.clerkUserId === ownerId);
   const managingStudentWorkspace = isTeacher && Boolean(managedStudent);
+  const { userId: viewerId } = useAuth();
+  const studentOwnsWorkspace = !isTeacher && Boolean(viewerId) && viewerId === ownerId;
+  const teacherPresent = useTeacherWatchingStudent({
+    classroomId,
+    ownerId,
+    active: studentOwnsWorkspace,
+  });
+  useTeacherPresenceBeacon({
+    classroomId,
+    ownerId,
+    enabled: managingStudentWorkspace,
+  });
+  const presenceBumpRef = useRef(0);
+
+  function bumpTeacherPresence() {
+    if (!managingStudentWorkspace) return;
+    const now = Date.now();
+    if (now - presenceBumpRef.current < 2_000) return;
+    presenceBumpRef.current = now;
+    void fetch("/api/workspace/presence", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ classroomId, ownerId }),
+    });
+  }
 
   function update(text: string) {
     if (!current || readOnly) return;
     setFiles((items) => items.map((file) => (file.path === current.path ? { ...file, text } : file)));
+    bumpTeacherPresence();
   }
 
   function openFile(path: string) {
@@ -384,7 +412,7 @@ export function Ide({
   return (
     <>
     <div className="grid h-full min-h-0 grid-cols-[13.75rem_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_min(38vh,13.5rem)] bg-[#1c1b18] text-ink">
-      <IdeWorkbenchChrome classroomId={classroomId} className={className} />
+      <IdeWorkbenchChrome classroomId={classroomId} className={className} teacherPresent={teacherPresent} />
       <aside className="flex min-h-0 flex-col border-r border-line bg-[#1c1b18]">
           {isTeacher ? (
             <div className="border-b border-line px-2 py-1.5">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { AccountChip } from "@/components/account-chip";
+import { TeacherPresenceBadge } from "@/components/teacher-presence-badge";
 
 function NavTab({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -15,7 +16,15 @@ function NavTab({ href, children }: { href: string; children: React.ReactNode })
   );
 }
 
-export function IdeWorkbenchChrome({ classroomId, className }: { classroomId: string; className: string }) {
+export function IdeWorkbenchChrome({
+  classroomId,
+  className,
+  teacherPresent,
+}: {
+  classroomId: string;
+  className: string;
+  teacherPresent?: boolean;
+}) {
   return (
     <header className="col-span-2 flex h-10 shrink-0 items-center gap-2 border-b border-line bg-[#161412] px-2 sm:gap-3 sm:px-3">
       <Link
@@ -38,6 +47,7 @@ export function IdeWorkbenchChrome({ classroomId, className }: { classroomId: st
         </span>
         <span className="truncate text-muted">Espace</span>
       </nav>
+      {teacherPresent ? <TeacherPresenceBadge /> : null}
       <nav className="hidden items-center gap-0.5 sm:ml-auto sm:flex" aria-label="Classe">
         <NavTab href={`/classes/${classroomId}`}>Classe</NavTab>
         <NavTab href={`/classes/${classroomId}/devoirs`}>Devoirs</NavTab>
