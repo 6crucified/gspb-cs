@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
+import { isClassroomTeacher } from "@/lib/assignments";
 import { getClassroomForUser } from "@/lib/classrooms";
 
 export const metadata: Metadata = { title: "Paramètres — Classe" };
@@ -12,6 +13,7 @@ export default async function ParametresInvitationPage({ params }: { params: Pro
   if (!userId) redirect("/sign-in");
   const [classroom, headerList] = await Promise.all([getClassroomForUser(id, userId), headers()]);
   if (!classroom) notFound();
+  if (!isClassroomTeacher(classroom, userId)) redirect(`/classes/${classroom.id}/parametres/membres`);
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "gspb.codes";
   const proto = headerList.get("x-forwarded-proto") ?? "https";
   const joinUrl = `${proto}://${host}/join/${classroom.slug}`;

@@ -53,10 +53,10 @@ export default async function ClassHomePage({
             <ConfirmLeave classroomId={classroom.id} className={classroom.name} />
           )}
           <Link
-            href={`/classes/${classroom.id}/parametres`}
+            href={isTeacher ? `/classes/${classroom.id}/parametres` : `/classes/${classroom.id}/parametres/membres`}
             className="rounded-full border border-line px-3 py-2 text-sm text-ink"
           >
-            Paramètres
+            {isTeacher ? "Paramètres" : "Membres"}
           </Link>
         </div>
       </div>
