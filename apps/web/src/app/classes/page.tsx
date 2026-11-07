@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
+import { ClassesPageChrome } from "@/components/classes-page-chrome";
 import { summarizeClassrooms } from "@/lib/assignments";
 import { formatDueDate } from "@/lib/assignment-files";
 import { listClassrooms } from "@/lib/classrooms";
@@ -16,6 +17,8 @@ export default async function ClassesPage() {
   const summaries = userId ? await summarizeClassrooms(classes.map((classroom: { id: string }) => classroom.id)) : new Map();
 
   return (
+    <>
+      {userId ? <ClassesPageChrome /> : null}
     <div className="mx-auto max-w-3xl px-6 py-16">
       <div className="flex items-end justify-between gap-4">
         <h1 className="font-display text-5xl font-semibold text-ink">Classes</h1>
@@ -76,6 +79,7 @@ export default async function ClassesPage() {
         </ul>
       )}
     </div>
+    </>
   );
 }
 

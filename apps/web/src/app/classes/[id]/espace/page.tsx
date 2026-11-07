@@ -31,6 +31,7 @@ export default async function EspacePage({
     <Ide
       key={ownerId}
       classroomId={classroom.id}
+      className={classroom.name}
       ownerId={ownerId}
       readOnly={false}
       isTeacher={isClassroomTeacher(classroom, userId)}

@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type MouseEvent, type MutableRefObject } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { File, FileCode, FileJson, FileText, Folder, Plus, Terminal, Upload, X } from "lucide-react";
-import { AccountChip } from "@/components/account-chip";
+import { editorLanguageLabel, IdeWorkbenchChrome } from "@/components/ide-workbench-chrome";
 import { createTerminalSession, terminalWrite } from "@/lib/terminal-io";
 import { fileHasTests, isSafeWorkspacePath } from "@/lib/workspace-path";
 import type { WorkspaceFile, WorkspaceRun } from "@/lib/workspace";
@@ -160,6 +159,7 @@ type Student = { clerkUserId: string; displayName: string | null; email: string 
 
 export function Ide({
   classroomId,
+  className,
   ownerId,
   readOnly,
   isTeacher,
@@ -168,6 +168,7 @@ export function Ide({
   initialRun,
 }: {
   classroomId: string;
+  className: string;
   ownerId: string;
   readOnly: boolean;
   isTeacher: boolean;
@@ -382,15 +383,9 @@ export function Ide({
 
   return (
     <>
-    <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_min(38vh,13.5rem)] bg-[#1c1b18] text-ink">
-      <div className="grid min-h-0 grid-cols-[13.75rem_minmax(0,1fr)]">
-        <aside className="flex min-h-0 flex-col border-r border-line bg-[#1c1b18]">
-          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line px-2 py-1.5">
-            <Link href="/classes" className="text-[11px] text-muted hover:text-ink">
-              ← Classes
-            </Link>
-            <AccountChip />
-          </div>
+    <div className="grid h-full min-h-0 grid-cols-[13.75rem_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)_min(38vh,13.5rem)] bg-[#1c1b18] text-ink">
+      <IdeWorkbenchChrome classroomId={classroomId} className={className} />
+      <aside className="flex min-h-0 flex-col border-r border-line bg-[#1c1b18]">
           {isTeacher ? (
             <div className="border-b border-line px-2 py-1.5">
               <select
@@ -416,6 +411,10 @@ export function Ide({
               ) : null}
             </div>
           ) : null}
+          <div className="flex h-7 shrink-0 items-center justify-between border-b border-line px-2 text-[10px] font-medium uppercase tracking-wider text-muted">
+            <span>Explorateur</span>
+            <span className="font-normal normal-case tracking-normal text-line">{files.length}</span>
+          </div>
           {readOnly ? null : (
             <div className="relative flex h-7 shrink-0 items-center gap-1 border-b border-line px-1 text-[11px]">
               <button
@@ -592,10 +591,13 @@ export function Ide({
             </div>
           </div>
           <CodePane path={current?.path ?? "main.py"} text={current?.text ?? ""} readOnly={readOnly} onChange={update} />
+          <footer className="flex h-6 shrink-0 items-center justify-between gap-3 border-t border-line bg-[#161412] px-2 font-mono text-[10px] text-muted sm:px-3">
+            <span className="min-w-0 truncate">{current?.path ?? "main.py"}</span>
+            <span className="shrink-0">{editorLanguageLabel(current?.path ?? "main.py")}</span>
+          </footer>
         </section>
-      </div>
 
-      <div className="flex min-h-0 flex-col border-t border-line bg-[#141311]">
+      <div className="col-span-2 flex min-h-0 flex-col border-t border-line bg-[#141311]">
         <div className="flex h-7 shrink-0 items-stretch border-b border-line bg-[#1c1b18] text-xs">
           <span className="flex items-center gap-1 border-r border-line px-2.5 text-muted">
             <Terminal className="h-3 w-3" aria-hidden />
