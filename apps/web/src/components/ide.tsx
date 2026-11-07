@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { File, FileCode, FileJson, FileText, Folder, Plus, Terminal, Upload, X } from "lucide-react";
 import { AccountChip } from "@/components/account-chip";
+import { createTerminalSession, terminalWrite } from "@/lib/terminal-io";
 import { fileHasTests, isSafeWorkspacePath } from "@/lib/workspace-path";
 import type { WorkspaceFile, WorkspaceRun } from "@/lib/workspace";
 
@@ -367,7 +368,7 @@ export function Ide({
       session: activeTerm,
       command: asTest ? `${command}` : command,
     });
-    writers.current[activeTerm]?.((result.output || result.error || "").replace(/\n/g, "\r\n"));
+    writers.current[activeTerm]?.(terminalWrite(result.output || result.error || ""));
   }
 
   function addTerminal() {
@@ -783,8 +784,12 @@ function TerminalView({
     const node = host.current;
     if (!node) return;
     let disposed = false;
-    let timer = 0;
     let term: { dispose: () => void } | undefined;
+    let io: ReturnType<typeof createTerminalSession> | undefined;
+    let fitRef: { fit: () => void } | undefined;
+    let resizeObserver: ResizeObserver | undefined;
+    const relayout = () => fitRef?.fit();
+
     void (async () => {
       const [{ Terminal }, { FitAddon }] = await Promise.all([import("@xterm/xterm"), import("@xterm/addon-fit")]);
       await import("@xterm/xterm/css/xterm.css");
@@ -800,29 +805,39 @@ function TerminalView({
       instance.loadAddon(fit);
       instance.open(host.current);
       fit.fit();
+      fitRef = fit;
       term = instance;
-      onReadyRef.current((text) => instance.write(text));
-      if (showBanner && initialRun?.stdout) instance.write(initialRun.stdout.replace(/\n/g, "\r\n"));
-      if (showBanner && initialRun?.stderr) instance.write(initialRun.stderr.replace(/\n/g, "\r\n"));
+      onReadyRef.current((text) => instance.write(terminalWrite(text)));
+
+      io = createTerminalSession({
+        classroomId,
+        ownerId,
+        sessionId,
+        postSession: session,
+        onOutput: (chunk) => instance.write(chunk),
+      });
+
+      if (showBanner && initialRun?.stdout) instance.write(terminalWrite(initialRun.stdout));
+      if (showBanner && initialRun?.stderr) instance.write(terminalWrite(initialRun.stderr));
+
       if (!readOnly) {
-        instance.onData((data) => {
-          void session({ op: "input", classroomId, ownerId, session: sessionId, data });
+        instance.onData((data) => io?.enqueueInput(data));
+        void session({ op: "open", classroomId, ownerId, session: sessionId, files: filesRef.current }).then((result) => {
+          io?.writeFromServer(result.output);
         });
-        void session({ op: "open", classroomId, ownerId, session: sessionId, files: filesRef.current });
+        io.startPolling();
       }
-      timer = window.setInterval(() => {
-        const query = new URLSearchParams({ classroomId, ownerId, session: sessionId });
-        void fetch(`/api/workspace/session?${query}`)
-          .then((response) => response.json())
-          .then((payload: { output?: string }) => {
-            if (payload.output) instance.write(payload.output);
-          })
-          .catch(() => undefined);
-      }, 400);
+
+      resizeObserver = new ResizeObserver(relayout);
+      resizeObserver.observe(host.current);
+      window.addEventListener("resize", relayout);
     })();
+
     return () => {
       disposed = true;
-      window.clearInterval(timer);
+      io?.stop();
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", relayout);
       term?.dispose();
     };
   }, [classroomId, filesRef, initialRun, ownerId, readOnly, sessionId, showBanner]);

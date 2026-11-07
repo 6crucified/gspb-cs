@@ -109,7 +109,7 @@ def remove_paths(paths):
 def pump(entry, fd):
     while True:
         try:
-            ready, _, _ = select.select([fd], [], [], 0.3)
+            ready, _, _ = select.select([fd], [], [], 0.05)
             if entry.get("fd") != fd:
                 return
             if not ready:
