@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Guides",
@@ -34,11 +33,6 @@ export default function GuidesPage() {
           </section>
         ))}
       </div>
-      <p className="mt-10 text-sm">
-        <Link href="/docs/setting-up-a-class" className="text-navy hover:underline">
-          Setting up a class
-        </Link>
-      </p>
     </div>
   );
 }

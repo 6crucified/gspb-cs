@@ -21,8 +21,11 @@ export default function AboutPage() {
       <h2 className="pt-4 font-display text-3xl text-ink">What a class includes</h2>
       <p>A join link, assignments with starter code, a workspace per student, tests, and a gradebook you can export.</p>
       <p>
-        Questions about a school rollout go through <a className="text-navy hover:underline" href="/feedback">Feedback</a>{" "}
-        after you have an account, or start with the <a className="text-navy hover:underline" href="/pricing">pricing</a>.
+        Questions about a school rollout start with the{" "}
+        <a className="text-navy hover:underline" href="/pricing">
+          pricing
+        </a>{" "}
+        page.
       </p>
     </ProsePage>
   );

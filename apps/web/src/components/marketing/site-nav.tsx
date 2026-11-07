@@ -8,7 +8,6 @@ import { MobileNav } from "@/components/marketing/mobile-nav";
 
 const signedOut = [
   { href: "/lessons", label: "Leçons" },
-  { href: "/docs", label: "Docs" },
   { href: "/pricing", label: "Tarifs" },
 ];
 
@@ -16,8 +15,6 @@ const signedIn = [
   { href: "/workspace", label: "Espace" },
   { href: "/classes", label: "Classes" },
   { href: "/api", label: "API" },
-  { href: "/docs", label: "Docs" },
-  { href: "/feedback", label: "Retours" },
 ];
 
 export function SiteNav() {

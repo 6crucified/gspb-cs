@@ -94,7 +94,7 @@ const faqs = [
   },
   {
     q: "Quelle taille pour une classe ?",
-    a: "La classe, c'est la section. Le nombre d'élèves ne change pas le prix. Pour un effectif plus grand, écrivez via Retours.",
+    a: "La classe, c'est la section. Le nombre d'élèves ne change pas le prix. Pour un déploiement plus large, consultez les tarifs établissement.",
   },
   {
     q: "Est-ce relié à mon ENT ?",
