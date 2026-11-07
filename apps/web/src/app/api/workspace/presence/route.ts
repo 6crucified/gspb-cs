@@ -1,10 +1,13 @@
 import { auth } from "@clerk/nextjs/server";
 import { isClassroomTeacher } from "@/lib/assignments";
 import { getClassroomForUser } from "@/lib/classrooms";
+import { getWorkspaceRev } from "@/lib/workspace-meta";
 import {
   clearWorkspacePresence,
+  getTeacherPresenceDetail,
   isTeacherPresentInWorkspace,
   touchWorkspacePresence,
+  type WorkspaceCursor,
 } from "@/lib/workspace-presence";
 
 export async function GET(request: Request) {
@@ -28,16 +31,32 @@ export async function GET(request: Request) {
   }
 
   const teacherActive = await isTeacherPresentInWorkspace(classroomId, ownerId);
-  return Response.json({ teacherActive });
+  const detail = teacherActive ? await getTeacherPresenceDetail(classroomId, ownerId) : null;
+  const rev = await getWorkspaceRev(classroomId, ownerId);
+  return Response.json({
+    teacherActive,
+    rev,
+    cursor: detail
+      ? {
+          activePath: detail.activePath,
+          headLine: detail.headLine,
+          headCol: detail.headCol,
+        }
+      : null,
+  });
 }
 
 export async function POST(request: Request) {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "Connexion requise." }, { status: 401 });
-  const body = (await request.json().catch(() => null)) as { classroomId?: string; ownerId?: string } | null;
+  const body = (await request.json().catch(() => null)) as {
+    classroomId?: string;
+    ownerId?: string;
+    cursor?: WorkspaceCursor;
+  } | null;
   const classroomId = body?.classroomId ?? "";
   const ownerId = body?.ownerId ?? "";
-  if (!classroomId || !ownerId) return Response.json({ error: "Requête invalide." }, { status: 400 });
+  if (!body || !classroomId || !ownerId) return Response.json({ error: "Requête invalide." }, { status: 400 });
 
   const classroom = await getClassroomForUser(classroomId, userId);
   if (!classroom || !isClassroomTeacher(classroom, userId)) {
@@ -47,7 +66,8 @@ export async function POST(request: Request) {
   const student = classroom.members.some((m: { clerkUserId: string; role: string }) => m.clerkUserId === ownerId && m.role === "student");
   if (!student) return Response.json({ error: "Accès refusé." }, { status: 403 });
 
-  await touchWorkspacePresence(classroomId, ownerId, userId, "teacher");
+  const rev = body.cursor?.filesRev ?? (await getWorkspaceRev(classroomId, ownerId));
+  await touchWorkspacePresence(classroomId, ownerId, userId, "teacher", body.cursor ? { ...body.cursor, filesRev: rev } : undefined);
   return Response.json({ ok: true });
 }
 

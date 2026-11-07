@@ -5,7 +5,8 @@ import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { File, FileCode, FileJson, FileText, Folder, Plus, Terminal, Upload, X } from "lucide-react";
 import { editorLanguageLabel, IdeWorkbenchChrome } from "@/components/ide-workbench-chrome";
-import { useTeacherPresenceBeacon, useTeacherWatchingStudent } from "@/hooks/use-workspace-presence";
+import { useWorkspaceCollab } from "@/hooks/use-workspace-collab";
+import { type RemotePeerState } from "@/lib/codemirror-remote-peer";
 import { createTerminalSession, terminalWrite } from "@/lib/terminal-io";
 import { fileHasTests, isSafeWorkspacePath } from "@/lib/workspace-path";
 import type { WorkspaceFile, WorkspaceRun } from "@/lib/workspace";
@@ -168,6 +169,7 @@ export function Ide({
   students,
   initialFiles,
   initialRun,
+  initialRev,
 }: {
   classroomId: string;
   className: string;
@@ -177,8 +179,10 @@ export function Ide({
   students: Student[];
   initialFiles: WorkspaceFile[];
   initialRun: WorkspaceRun | null;
+  initialRev: number;
 }) {
   const [files, setFiles] = useState(initialFiles);
+  const [filesRev, setFilesRev] = useState(initialRev);
   const [open, setOpen] = useState<string[]>([initialFiles[0]?.path ?? "main.py"]);
   const [active, setActive] = useState(initialFiles[0]?.path ?? "main.py");
   const [creating, setCreating] = useState<"file" | "folder" | null>(null);
@@ -204,34 +208,23 @@ export function Ide({
   const managingStudentWorkspace = isTeacher && Boolean(managedStudent);
   const { userId: viewerId } = useAuth();
   const studentOwnsWorkspace = !isTeacher && Boolean(viewerId) && viewerId === ownerId;
-  const teacherPresent = useTeacherWatchingStudent({
+  const collabActive = studentOwnsWorkspace || managingStudentWorkspace;
+  const { teacherPresent, remotePeer, scheduleSave, reportSelection } = useWorkspaceCollab({
     classroomId,
     ownerId,
-    active: studentOwnsWorkspace,
+    filesRef,
+    filesRev,
+    setFilesRev,
+    setFiles,
+    activePath: current?.path ?? "main.py",
+    collabActive,
+    managingStudent: managingStudentWorkspace,
   });
-  useTeacherPresenceBeacon({
-    classroomId,
-    ownerId,
-    enabled: managingStudentWorkspace,
-  });
-  const presenceBumpRef = useRef(0);
-
-  function bumpTeacherPresence() {
-    if (!managingStudentWorkspace) return;
-    const now = Date.now();
-    if (now - presenceBumpRef.current < 2_000) return;
-    presenceBumpRef.current = now;
-    void fetch("/api/workspace/presence", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ classroomId, ownerId }),
-    });
-  }
 
   function update(text: string) {
     if (!current || readOnly) return;
     setFiles((items) => items.map((file) => (file.path === current.path ? { ...file, text } : file)));
-    bumpTeacherPresence();
+    scheduleSave();
   }
 
   function openFile(path: string) {
@@ -254,6 +247,7 @@ export function Ide({
     setFiles(next);
     if (kind === "file") openFile(path);
     void session({ op: "move", classroomId, ownerId, files: next, removed: [], session: activeTerm });
+    scheduleSave();
   }
 
   async function upload(list: FileList | null) {
@@ -297,6 +291,7 @@ export function Ide({
     setOpen((tabs) => tabs.map(remap));
     setActive((path) => remap(path));
     void session({ op: "move", classroomId, ownerId, files: next, removed, session: activeTerm });
+    scheduleSave();
   }
 
   function relocate(raw: string, intoFolder: string) {
@@ -342,6 +337,7 @@ export function Ide({
     setActive((path) => (removed.includes(path) ? fallback : path));
     setContextMenu(null);
     void session({ op: "move", classroomId, ownerId, files: next, removed, session: activeTerm });
+    scheduleSave();
   }
 
   function duplicateFile(path: string) {
@@ -365,6 +361,7 @@ export function Ide({
     openFile(candidate);
     setContextMenu(null);
     void session({ op: "move", classroomId, ownerId, files: next, removed: [], session: activeTerm });
+    scheduleSave();
   }
 
   function commitRename() {
@@ -618,7 +615,14 @@ export function Ide({
               ) : null}
             </div>
           </div>
-          <CodePane path={current?.path ?? "main.py"} text={current?.text ?? ""} readOnly={readOnly} onChange={update} />
+          <CodePane
+            path={current?.path ?? "main.py"}
+            text={current?.text ?? ""}
+            readOnly={readOnly}
+            remotePeer={studentOwnsWorkspace ? remotePeer : null}
+            onChange={update}
+            onSelectionChange={reportSelection}
+          />
           <footer className="flex h-6 shrink-0 items-center justify-between gap-3 border-t border-line bg-[#161412] px-2 font-mono text-[10px] text-muted sm:px-3">
             <span className="min-w-0 truncate">{current?.path ?? "main.py"}</span>
             <span className="shrink-0">{editorLanguageLabel(current?.path ?? "main.py")}</span>
@@ -879,23 +883,35 @@ function CodePane({
   path,
   text,
   readOnly,
+  remotePeer,
   onChange,
+  onSelectionChange,
 }: {
   path: string;
   text: string;
   readOnly: boolean;
+  remotePeer: RemotePeerState;
   onChange: (text: string) => void;
+  onSelectionChange: (selection: {
+    activePath: string;
+    anchorLine: number;
+    anchorCol: number;
+    headLine: number;
+    headCol: number;
+  }) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<import("@codemirror/view").EditorView | null>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-  const textRef = useRef(text);
-  textRef.current = text;
+  const onSelectionRef = useRef(onSelectionChange);
+  onSelectionRef.current = onSelectionChange;
+  const pathRef = useRef(path);
+  pathRef.current = path;
 
   useEffect(() => {
     const parent = host.current;
     if (!parent) return;
-    let view: { destroy: () => void } | null = null;
     let cancelled = false;
     void (async () => {
       const [{ EditorView }, { EditorState }, { basicSetup }, { oneDark }] = await Promise.all([
@@ -904,15 +920,17 @@ function CodePane({
         import("codemirror"),
         import("@codemirror/theme-one-dark"),
       ]);
+      const { remotePeerExtension, setRemotePeer } = await import("@/lib/codemirror-remote-peer");
       const language = await languageFor(path);
       if (cancelled || !host.current) return;
-      view = new EditorView({
+      const view = new EditorView({
         state: EditorState.create({
-          doc: textRef.current,
+          doc: text,
           extensions: [
             basicSetup,
             oneDark,
             language,
+            ...remotePeerExtension(),
             EditorView.editable.of(!readOnly),
             EditorView.theme({
               "&": { height: "100%", fontSize: "13px", backgroundColor: "#1c1b18" },
@@ -922,17 +940,51 @@ function CodePane({
             }),
             EditorView.updateListener.of((update) => {
               if (update.docChanged) onChangeRef.current(update.state.doc.toString());
+              if (update.selectionSet) {
+                const main = update.state.selection.main;
+                const anchorLine = update.state.doc.lineAt(main.anchor);
+                const headLine = update.state.doc.lineAt(main.head);
+                onSelectionRef.current({
+                  activePath: pathRef.current,
+                  anchorLine: anchorLine.number - 1,
+                  anchorCol: main.anchor - anchorLine.from,
+                  headLine: headLine.number - 1,
+                  headCol: main.head - headLine.from,
+                });
+              }
             }),
           ],
         }),
         parent: host.current,
       });
+      viewRef.current = view;
     })();
     return () => {
       cancelled = true;
-      view?.destroy();
+      viewRef.current?.destroy();
+      viewRef.current = null;
     };
   }, [path, readOnly]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    const current = view.state.doc.toString();
+    if (current !== text) {
+      view.dispatch({
+        changes: { from: 0, to: view.state.doc.length, insert: text },
+      });
+    }
+  }, [text]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    void (async () => {
+      const { setRemotePeer } = await import("@/lib/codemirror-remote-peer");
+      view.dispatch({ effects: setRemotePeer.of(remotePeer) });
+    })();
+  }, [remotePeer]);
 
   return <div ref={host} className="min-h-0 flex-1 overflow-hidden" />;
 }

@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Ide } from "@/components/ide";
 import { isClassroomTeacher } from "@/lib/assignments";
 import { getClassroomForUser, type ClassroomMemberRecord } from "@/lib/classrooms";
+import { getWorkspaceRev } from "@/lib/workspace-meta";
 import { readWorkspace } from "@/lib/workspace";
 
 export const metadata: Metadata = { title: "Espace" };
@@ -25,7 +26,7 @@ export default async function EspacePage({
     eleve && isClassroomTeacher(classroom, userId) && students.some((student: ClassroomMemberRecord) => student.clerkUserId === eleve),
   );
   const ownerId = teacherViewingStudent ? eleve! : userId;
-  const workspace = await readWorkspace(classroom.id, ownerId);
+  const [workspace, initialRev] = await Promise.all([readWorkspace(classroom.id, ownerId), getWorkspaceRev(classroom.id, ownerId)]);
 
   return (
     <Ide
@@ -42,6 +43,7 @@ export default async function EspacePage({
       }))}
       initialFiles={workspace.files}
       initialRun={workspace.run}
+      initialRev={initialRev}
     />
   );
 }
