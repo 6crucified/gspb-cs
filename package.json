@@ -13,7 +13,7 @@
     "db:generate": "pnpm --filter @gspb-cs/database db:generate",
     "db:push": "pnpm --filter @gspb-cs/database db:push",
     "db:seed": "dotenv -e .env -- prisma db seed --schema prisma/schema.prisma",
-    "postinstall": "pnpm db:generate && node apps/web/scripts/cf-ci-build.mjs"
+    "postinstall": "node scripts/postinstall.mjs"
   },
   "dependencies": {
     "@prisma/client": "6.19.3"
