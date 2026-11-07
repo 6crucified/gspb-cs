@@ -2,10 +2,10 @@
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { isIdePath } from "@/lib/minimal-chrome";
 
 export function SiteFrame({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const studio = /^\/classes\/(?!new(?:\/|$))[^/]+\/espace/.test(pathname);
-  if (studio) return <div className="h-[calc(100dvh-4rem)] overflow-hidden">{children}</div>;
+  if (isIdePath(pathname)) return <div className="h-dvh overflow-hidden">{children}</div>;
   return <main>{children}</main>;
 }

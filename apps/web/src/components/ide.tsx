@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type MouseEvent, type MutableRefObject } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { File, FileCode, FileJson, FileText, Folder, Plus, Terminal, Upload, X } from "lucide-react";
+import { AccountChip } from "@/components/account-chip";
 import { fileHasTests, isSafeWorkspacePath } from "@/lib/workspace-path";
 import type { WorkspaceFile, WorkspaceRun } from "@/lib/workspace";
 
@@ -382,6 +384,12 @@ export function Ide({
     <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_min(38vh,13.5rem)] bg-[#1c1b18] text-ink">
       <div className="grid min-h-0 grid-cols-[13.75rem_minmax(0,1fr)]">
         <aside className="flex min-h-0 flex-col border-r border-line bg-[#1c1b18]">
+          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line px-2 py-1.5">
+            <Link href="/classes" className="text-[11px] text-muted hover:text-ink">
+              ← Classes
+            </Link>
+            <AccountChip />
+          </div>
           {isTeacher ? (
             <div className="border-b border-line px-2 py-1.5">
               <select

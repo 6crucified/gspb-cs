@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { DM_Mono, DM_Sans, Newsreader } from "next/font/google";
-import { SiteNav } from "@/components/marketing/site-nav";
+import { AppChrome } from "@/components/app-chrome";
 import { SiteFrame } from "@/components/site-frame";
 import { clerkLocalization } from "@/lib/clerk-localization";
 import "./globals.css";
@@ -28,8 +28,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <html lang="fr" className={`${sans.variable} ${mono.variable} ${display.variable}`}>
         <body className="min-h-dvh bg-paper font-sans text-ink-soft antialiased">
-          <SiteNav />
-          <SiteFrame>{children}</SiteFrame>
+          <AppChrome>
+            <SiteFrame>{children}</SiteFrame>
+          </AppChrome>
         </body>
       </html>
     </ClerkProvider>

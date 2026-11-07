@@ -1,6 +1,7 @@
 "use client";
 
-import { UserButton, useAuth } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
+import { AccountChip } from "@/components/account-chip";
 import Link from "next/link";
 import { Mark } from "@/components/marketing/mark";
 import { MobileNav } from "@/components/marketing/mobile-nav";
@@ -40,9 +41,7 @@ export function SiteNav() {
           </nav>
         </div>
         <div className="flex items-center gap-2">
-          {isLoaded && isSignedIn ? (
-            <UserButton afterSignOutUrl="/" />
-          ) : null}
+          {isLoaded && isSignedIn ? <AccountChip /> : null}
           {isLoaded && !isSignedIn ? (
             <>
               <Link href="/sign-in" className="hidden rounded-full px-3 py-1.5 text-sm text-ink-soft hover:bg-white/5 sm:inline">
