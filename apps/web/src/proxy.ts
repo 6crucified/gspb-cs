@@ -19,6 +19,8 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks/clerk(.*)",
   "/api/health(.*)",
   "/api/mcp",
+  "/monitoring",
+  "/api/sentry-verify",
 ]);
 
 const isIgnoredRoute = createRouteMatcher([
