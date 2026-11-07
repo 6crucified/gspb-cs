@@ -4,6 +4,9 @@ compatibility_date = "2026-10-28"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
+[build]
+command = "node ./scripts/with-env.mjs pnpm exec opennextjs-cloudflare build"
+
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"
