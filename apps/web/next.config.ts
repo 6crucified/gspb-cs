@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   outputFileTracingRoot: workspaceRoot,
   serverExternalPackages: ["@prisma/client"],
-  transpilePackages: ["@gspb-cs/auth", "@gspb-cs/database"],
+  transpilePackages: ["@gspb-cs/auth", "@gspb-cs/database", "agents"],
   cacheMaxMemorySize: 12 * 1024 * 1024,
   experimental: {
     proxyClientMaxBodySize: "5mb",

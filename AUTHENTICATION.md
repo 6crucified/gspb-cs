@@ -109,10 +109,34 @@ cd apps/web
 pnpm dlx clerk@latest doctor
 ```
 
+## MCP (devoirs)
+
+**Endpoint:** `POST https://<site>/api/mcp` (Streamable HTTP, MCP SDK v2)
+
+The route verifies a **Clerk session JWT** sent as `Authorization: Bearer <token>`. Create a long-lived token from the Clerk Dashboard (JWT template) or reuse a browser session token while testing locally.
+
+| Tool | Description |
+|------|-------------|
+| `add_devoir` | Publie un devoir (`classroomId`, `title`, `description`, `dueOn`, optional `files[]`) |
+| `delete_devoir` | Supprime un devoir (`classroomId`, `assignmentId`) |
+
+Only classroom teachers may call these tools. Connect Cursor or another MCP client to:
+
+```text
+https://gspb.codes/api/mcp
+```
+
+Local dev:
+
+```text
+http://localhost:3000/api/mcp
+```
+
 ## Troubleshooting
 
 | Symptom | Check |
 |---------|--------|
+| MCP 401 | Bearer token missing or expired; Clerk `authorizedParties` includes `NEXT_PUBLIC_SITE_URL` |
 | Redirect loop | Clerk URLs match `/sign-in` and `/sign-up`; proxy public routes |
 | 401 on `/api/me` | User signed in but no `UserProfile`—webhook delivery / signing secret |
 | 403 on school API | Missing `SchoolMembership` row |
