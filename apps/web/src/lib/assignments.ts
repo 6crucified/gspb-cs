@@ -15,6 +15,13 @@ export type AssignmentStatusRecord = {
   status: AssignmentStatus;
 };
 
+export type AssignmentViewRecord = {
+  assignmentId: string;
+  clerkUserId: string;
+  firstSeenAt: string;
+  lastSeenAt: string;
+};
+
 export type AssignmentRecord = {
   id: string;
   classroomId: string;
@@ -24,6 +31,7 @@ export type AssignmentRecord = {
   createdAt: string;
   files: AssignmentFileRecord[];
   statuses: AssignmentStatusRecord[];
+  views: AssignmentViewRecord[];
 };
 
 export type ClassroomWithMembers = ClassroomRecord & { members: ClassroomMemberRecord[] };
@@ -63,6 +71,14 @@ const SCHEMA = [
     updated_at TEXT NOT NULL,
     PRIMARY KEY (assignment_id, clerk_user_id)
   )`,
+  `CREATE TABLE IF NOT EXISTS assignment_views (
+    assignment_id TEXT NOT NULL,
+    clerk_user_id TEXT NOT NULL,
+    first_seen_at TEXT NOT NULL,
+    last_seen_at TEXT NOT NULL,
+    PRIMARY KEY (assignment_id, clerk_user_id)
+  )`,
+  `CREATE INDEX IF NOT EXISTS assignment_views_assignment_idx ON assignment_views (assignment_id)`,
 ];
 
 let schemaReady: Promise<void> | null = null;
@@ -134,7 +150,7 @@ export async function requireClassroom(classroomId: string, userId: string) {
 export async function listAssignments(classroomId: string): Promise<AssignmentRecord[]> {
   await ensureAssignmentSchema();
   const db = await database();
-  const [assignments, files, statuses] = await Promise.all([
+  const [assignments, files, statuses, views] = await Promise.all([
     db
       .prepare(
         `SELECT id, classroom_id, title, description, due_on, created_at
@@ -154,6 +170,15 @@ export async function listAssignments(classroomId: string): Promise<AssignmentRe
         `SELECT s.assignment_id, s.clerk_user_id, s.status
          FROM assignment_statuses s
          JOIN assignments a ON a.id = s.assignment_id
+         WHERE a.classroom_id = ?`,
+      )
+      .bind(classroomId)
+      .all<Record<string, string>>(),
+    db
+      .prepare(
+        `SELECT v.assignment_id, v.clerk_user_id, v.first_seen_at, v.last_seen_at
+         FROM assignment_views v
+         JOIN assignments a ON a.id = v.assignment_id
          WHERE a.classroom_id = ?`,
       )
       .bind(classroomId)
@@ -182,6 +207,19 @@ export async function listAssignments(classroomId: string): Promise<AssignmentRe
     statusesByAssignment.set(assignmentId, list);
   }
 
+  const viewsByAssignment = new Map<string, AssignmentViewRecord[]>();
+  for (const row of views.results ?? []) {
+    const assignmentId = String(row.assignment_id);
+    const list = viewsByAssignment.get(assignmentId) ?? [];
+    list.push({
+      assignmentId,
+      clerkUserId: String(row.clerk_user_id),
+      firstSeenAt: String(row.first_seen_at),
+      lastSeenAt: String(row.last_seen_at),
+    });
+    viewsByAssignment.set(assignmentId, list);
+  }
+
   return (assignments.results ?? []).map((row: Record<string, string>) => ({
     id: row.id,
     classroomId: row.classroom_id,
@@ -191,7 +229,42 @@ export async function listAssignments(classroomId: string): Promise<AssignmentRe
     createdAt: row.created_at,
     files: filesByAssignment.get(row.id) ?? [],
     statuses: statusesByAssignment.get(row.id) ?? [],
+    views: viewsByAssignment.get(row.id) ?? [],
   }));
+}
+
+export async function touchAssignmentView(assignmentId: string, clerkUserId: string) {
+  await ensureAssignmentSchema();
+  const db = await database();
+  const now = new Date().toISOString();
+  await db
+    .prepare(
+      `INSERT INTO assignment_views (assignment_id, clerk_user_id, first_seen_at, last_seen_at)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(assignment_id, clerk_user_id) DO UPDATE SET last_seen_at = excluded.last_seen_at`,
+    )
+    .bind(assignmentId, clerkUserId, now, now)
+    .run();
+}
+
+export async function recordStudentAssignmentViews(classroomId: string, clerkUserId: string) {
+  await ensureAssignmentSchema();
+  const db = await database();
+  const rows = await db
+    .prepare(`SELECT id FROM assignments WHERE classroom_id = ?`)
+    .bind(classroomId)
+    .all<{ id: string }>();
+  const now = new Date().toISOString();
+  for (const row of rows.results ?? []) {
+    await db
+      .prepare(
+        `INSERT INTO assignment_views (assignment_id, clerk_user_id, first_seen_at, last_seen_at)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(assignment_id, clerk_user_id) DO UPDATE SET last_seen_at = excluded.last_seen_at`,
+      )
+      .bind(row.id, clerkUserId, now, now)
+      .run();
+  }
 }
 
 export async function createAssignment(input: {
@@ -257,6 +330,7 @@ export async function deleteAssignment(classroomId: string, assignmentId: string
   await db.batch([
     db.prepare(`DELETE FROM assignment_files WHERE assignment_id = ?`).bind(assignmentId),
     db.prepare(`DELETE FROM assignment_statuses WHERE assignment_id = ?`).bind(assignmentId),
+    db.prepare(`DELETE FROM assignment_views WHERE assignment_id = ?`).bind(assignmentId),
   ]);
   return true;
 }
@@ -296,6 +370,13 @@ export async function readAssignmentFile(input: {
 }) {
   const classroom = await getClassroomForUser(input.classroomId, input.clerkUserId);
   if (!classroom) return null;
+
+  const member = classroom.members.find(
+    (item: ClassroomMemberRecord) => item.clerkUserId === input.clerkUserId,
+  );
+  if (member?.role === "student") {
+    await touchAssignmentView(input.assignmentId, input.clerkUserId);
+  }
 
   await ensureAssignmentSchema();
   const db = await database();

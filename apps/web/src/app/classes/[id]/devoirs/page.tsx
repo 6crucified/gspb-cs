@@ -12,22 +12,26 @@ export default async function DevoirsPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ erreur?: string }>;
+  searchParams: Promise<{ erreur?: string; publier?: string }>;
 }) {
-  const [{ id }, { erreur }, session] = await Promise.all([params, searchParams, auth()]);
+  const [{ id }, { erreur, publier }, session] = await Promise.all([params, searchParams, auth()]);
   const { userId } = session;
   if (!userId) redirect("/sign-in");
   const classroom = await getClassroomForUser(id, userId);
   if (!classroom) notFound();
 
+  const isTeacher = isClassroomTeacher(classroom, userId);
+  const showPublish = isTeacher && publier === "1";
+
   return (
     <div className="h-full overflow-auto">
-      <div className="mx-auto max-w-3xl px-6 py-10">
+      <div className="mx-auto max-w-3xl px-6 py-12">
         <Devoirs
           classroomId={classroom.id}
-          isTeacher={isClassroomTeacher(classroom, userId)}
+          isTeacher={isTeacher}
           viewerId={userId}
           erreur={erreur}
+          showPublish={showPublish}
           students={classroom.members.filter((member: ClassroomMemberRecord) => member.role === "student")}
         />
       </div>

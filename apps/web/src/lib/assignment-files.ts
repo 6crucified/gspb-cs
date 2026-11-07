@@ -89,6 +89,17 @@ export function statusLabel(status: AssignmentStatus): string {
   return status === "done" ? "Fait" : "À faire";
 }
 
+export function formatSeenAt(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
 export function formatDueDate(dueOn: string): string {
   const parsed = parseDueDate(dueOn);
   if (!parsed) return dueOn;
