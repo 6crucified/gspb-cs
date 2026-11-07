@@ -21,10 +21,10 @@ export default async function EspacePage({
   const classroom = await getClassroomForUser(id, userId);
   if (!classroom) notFound();
   const students = classroom.members.filter((member: ClassroomMemberRecord) => member.role === "student");
-  const watching = Boolean(
+  const teacherViewingStudent = Boolean(
     eleve && isClassroomTeacher(classroom, userId) && students.some((student: ClassroomMemberRecord) => student.clerkUserId === eleve),
   );
-  const ownerId = watching ? eleve! : userId;
+  const ownerId = teacherViewingStudent ? eleve! : userId;
   const workspace = await readWorkspace(classroom.id, ownerId);
 
   return (
@@ -32,7 +32,7 @@ export default async function EspacePage({
       key={ownerId}
       classroomId={classroom.id}
       ownerId={ownerId}
-      readOnly={watching}
+      readOnly={false}
       isTeacher={isClassroomTeacher(classroom, userId)}
       students={students.map((student: ClassroomMemberRecord) => ({
         clerkUserId: student.clerkUserId,

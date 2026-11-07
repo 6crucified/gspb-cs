@@ -10,7 +10,7 @@ async function targetUser(viewerId: string, classroomId: string, studentId: stri
   const teacher = isClassroomTeacher(classroom, viewerId);
   const student = classroom.members.some((member: { clerkUserId: string; role: string }) => member.clerkUserId === studentId && member.role === "student");
   if (!teacher || !student) return null;
-  return { userId: studentId, readOnly: true, classroomId };
+  return { userId: studentId, readOnly: false, classroomId };
 }
 
 export async function GET(request: Request) {

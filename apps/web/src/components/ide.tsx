@@ -194,6 +194,8 @@ export function Ide({
   const writers = useRef<Record<string, (text: string) => void>>({});
   const filesRef = useRef(files);
   filesRef.current = files;
+  const managedStudent = students.find((student) => student.clerkUserId === ownerId);
+  const managingStudentWorkspace = isTeacher && Boolean(managedStudent);
 
   function update(text: string) {
     if (!current || readOnly) return;
@@ -384,7 +386,7 @@ export function Ide({
             <div className="border-b border-line px-2 py-1.5">
               <select
                 aria-label="Élève"
-                value={readOnly ? ownerId : ""}
+                value={managingStudentWorkspace ? ownerId : ""}
                 onChange={(event) => {
                   const value = event.target.value;
                   router.push(value ? `/classes/${classroomId}/espace?eleve=${value}` : `/classes/${classroomId}/espace`);
@@ -398,6 +400,11 @@ export function Ide({
                   </option>
                 ))}
               </select>
+              {managingStudentWorkspace && managedStudent ? (
+                <p className="mt-1 text-[10px] leading-snug text-muted">
+                  Vous modifiez l&apos;espace de {managedStudent.displayName || managedStudent.email}.
+                </p>
+              ) : null}
             </div>
           ) : null}
           {readOnly ? null : (
