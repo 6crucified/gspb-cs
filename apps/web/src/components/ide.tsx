@@ -8,7 +8,8 @@ import { editorLanguageLabel, IdeWorkbenchChrome } from "@/components/ide-workbe
 import { useWorkspaceCollab } from "@/hooks/use-workspace-collab";
 import { type RemotePeerState } from "@/lib/codemirror-remote-peer";
 import { createTerminalSession, terminalWrite } from "@/lib/terminal-io";
-import { fileHasTests, isSafeWorkspacePath } from "@/lib/workspace-path";
+import { chunkPaths, compactSessionFiles } from "@/lib/workspace-payload";
+import { fileHasTests, isIgnoredWorkspacePath, isSafeWorkspacePath, WORKSPACE_TEXT_MAX_BYTES } from "@/lib/workspace-path";
 import type { WorkspaceFile, WorkspaceRun } from "@/lib/workspace";
 
 type Node = { name: string; path?: string; folderPath: string; children: Map<string, Node> };
@@ -150,10 +151,14 @@ function Tree({
 }
 
 async function session(body: Record<string, unknown>) {
+  const payload = { ...body };
+  if (Array.isArray(payload.files)) {
+    payload.files = compactSessionFiles(payload.files as WorkspaceFile[]);
+  }
   const response = await fetch("/api/workspace/session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
   });
   return (await response.json()) as { ok?: boolean; output?: string; error?: string };
 }
@@ -168,6 +173,7 @@ export function Ide({
   isTeacher,
   students,
   initialFiles,
+  initialWorkspacePaths,
   initialRun,
   initialRev,
 }: {
@@ -178,6 +184,7 @@ export function Ide({
   isTeacher: boolean;
   students: Student[];
   initialFiles: WorkspaceFile[];
+  initialWorkspacePaths: string[];
   initialRun: WorkspaceRun | null;
   initialRev: number;
 }) {
@@ -204,6 +211,8 @@ export function Ide({
   const writers = useRef<Record<string, (text: string) => void>>({});
   const filesRef = useRef(files);
   filesRef.current = files;
+  const dirtyPathsRef = useRef(new Set<string>());
+  const hydratedRef = useRef(false);
   const managedStudent = students.find((student) => student.clerkUserId === ownerId);
   const managingStudentWorkspace = isTeacher && Boolean(managedStudent);
   const { userId: viewerId } = useAuth();
@@ -213,6 +222,7 @@ export function Ide({
     classroomId,
     ownerId,
     filesRef,
+    dirtyPathsRef,
     filesRev,
     setFilesRev,
     setFiles,
@@ -221,8 +231,38 @@ export function Ide({
     managingStudent: managingStudentWorkspace,
   });
 
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+    const paths = initialWorkspacePaths.filter((path) => path !== ".folder" && !path.endsWith("/.folder"));
+    if (paths.length === 0) return;
+    void (async () => {
+      const content = new Map<string, string>();
+      for (const batch of chunkPaths(paths)) {
+        const params = new URLSearchParams({ classroomId, ownerId, paths: batch.join(",") });
+        const response = await fetch(`/api/workspace/files?${params}`);
+        if (!response.ok) continue;
+        const payload = (await response.json()) as { files?: WorkspaceFile[] };
+        for (const file of payload.files ?? []) content.set(file.path, file.text);
+      }
+      if (content.size === 0) return;
+      setFiles((items) =>
+        items.map((file) => {
+          if (file.path.endsWith("/.folder") || file.path === ".folder") return file;
+          const text = content.get(file.path);
+          return text === undefined ? file : { ...file, text };
+        }),
+      );
+    })();
+  }, [classroomId, initialWorkspacePaths, ownerId]);
+
+  function markDirty(path: string) {
+    dirtyPathsRef.current.add(path);
+  }
+
   function update(text: string) {
     if (!current || readOnly) return;
+    markDirty(current.path);
     setFiles((items) => items.map((file) => (file.path === current.path ? { ...file, text } : file)));
     scheduleSave();
   }
@@ -245,6 +285,7 @@ export function Ide({
     if (files.some((file) => file.path === path)) return;
     const next = [...files, { path, text: "" }];
     setFiles(next);
+    markDirty(path);
     if (kind === "file") openFile(path);
     void session({ op: "move", classroomId, ownerId, files: next, removed: [], session: activeTerm });
     scheduleSave();
@@ -254,7 +295,13 @@ export function Ide({
     const picked = [...(list ?? [])];
     const next: WorkspaceFile[] = [];
     for (const file of picked) {
-      if (file.size > 100_000 || !isSafeWorkspacePath(file.name)) continue;
+      if (
+        file.size > WORKSPACE_TEXT_MAX_BYTES ||
+        !isSafeWorkspacePath(file.name) ||
+        isIgnoredWorkspacePath(file.name)
+      ) {
+        continue;
+      }
       next.push({ path: file.name, text: await file.text() });
     }
     if (next.length === 0) {
@@ -267,7 +314,9 @@ export function Ide({
       for (const file of next) map.set(file.path, file);
       return [...map.values()];
     });
+    for (const file of next) markDirty(file.path);
     openFile(next[0].path);
+    scheduleSave();
   }
 
   function rewrite(from: string, dest: string, kind: "file" | "folder") {

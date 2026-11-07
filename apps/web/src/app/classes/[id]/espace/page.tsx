@@ -5,7 +5,7 @@ import { Ide } from "@/components/ide";
 import { isClassroomTeacher } from "@/lib/assignments";
 import { getClassroomForUser, type ClassroomMemberRecord } from "@/lib/classrooms";
 import { getWorkspaceRev } from "@/lib/workspace-meta";
-import { readWorkspace } from "@/lib/workspace";
+import { readWorkspaceIndex } from "@/lib/workspace";
 
 export const metadata: Metadata = { title: "Espace" };
 
@@ -26,7 +26,11 @@ export default async function EspacePage({
     eleve && isClassroomTeacher(classroom, userId) && students.some((student: ClassroomMemberRecord) => student.clerkUserId === eleve),
   );
   const ownerId = teacherViewingStudent ? eleve! : userId;
-  const [workspace, initialRev] = await Promise.all([readWorkspace(classroom.id, ownerId), getWorkspaceRev(classroom.id, ownerId)]);
+  const [workspace, initialRev] = await Promise.all([
+    readWorkspaceIndex(classroom.id, ownerId),
+    getWorkspaceRev(classroom.id, ownerId),
+  ]);
+  const initialFiles = workspace.paths.map((path: string) => ({ path, text: "" }));
 
   return (
     <Ide
@@ -41,7 +45,8 @@ export default async function EspacePage({
         displayName: student.displayName,
         email: student.email,
       }))}
-      initialFiles={workspace.files}
+      initialFiles={initialFiles}
+      initialWorkspacePaths={workspace.paths}
       initialRun={workspace.run}
       initialRev={initialRev}
     />

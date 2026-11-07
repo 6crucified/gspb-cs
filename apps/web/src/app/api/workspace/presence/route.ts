@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { readJsonBody, payloadTooLarge } from "@/lib/request-payload";
 import { isClassroomTeacher } from "@/lib/assignments";
 import { getClassroomForUser } from "@/lib/classrooms";
 import { getWorkspaceRev } from "@/lib/workspace-meta";
@@ -49,11 +50,15 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "Connexion requise." }, { status: 401 });
-  const body = (await request.json().catch(() => null)) as {
+  const blocked = payloadTooLarge(request);
+  if (blocked) return blocked;
+  const parsed = await readJsonBody<{
     classroomId?: string;
     ownerId?: string;
     cursor?: WorkspaceCursor;
-  } | null;
+  }>(request);
+  if (parsed instanceof Response) return parsed;
+  const body = parsed;
   const classroomId = body?.classroomId ?? "";
   const ownerId = body?.ownerId ?? "";
   if (!body || !classroomId || !ownerId) return Response.json({ error: "Requête invalide." }, { status: 400 });

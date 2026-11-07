@@ -2,14 +2,8 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { requireClassroom } from "@/lib/assignments";
-import {
-  isSafeWorkspacePath,
-  runWorkspace,
-  saveWorkspaceFile,
-  saveWorkspaceRun,
-  type WorkspaceFile,
-  type WorkspaceRun,
-} from "@/lib/workspace";
+import { filterWorkspaceFiles } from "@/lib/workspace-sync-filter";
+import { isSafeWorkspacePath, runWorkspace, saveWorkspaceFilesBatch, saveWorkspaceRun, type WorkspaceFile, type WorkspaceRun } from "@/lib/workspace";
 
 export async function runIde(input: {
   classroomId: string;
@@ -32,12 +26,10 @@ export async function runIde(input: {
     return failed("Choisis un fichier Python à lancer.");
   }
 
-  const files = input.files.filter((file) => isSafeWorkspacePath(file.path) && file.text.length <= 100_000);
+  const files = filterWorkspaceFiles(input.files);
   if (!files.some((file) => file.path === input.entry)) return failed("Fichier introuvable.");
 
-  for (const file of files) {
-    await saveWorkspaceFile(input.classroomId, userId, file.path, file.text);
-  }
+  await saveWorkspaceFilesBatch(input.classroomId, userId, files);
 
   const run = await runWorkspace(userId, files, input.entry);
   await saveWorkspaceRun(input.classroomId, userId, run);

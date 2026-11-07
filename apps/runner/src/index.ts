@@ -28,6 +28,12 @@ export default {
     const allowed = url.pathname === "/session/output" || url.pathname === "/session/input" || url.pathname === "/session/open" || url.pathname === "/session/run";
     if (!allowed) return new Response("Introuvable", { status: 404 });
 
+    const maxBytes = 5 * 1024 * 1024;
+    const length = Number(request.headers.get("content-length") ?? "0");
+    if (request.method !== "GET" && Number.isFinite(length) && length > maxBytes) {
+      return new Response("Corps trop volumineux", { status: 413 });
+    }
+
     let body: SessionBody = {};
     if (request.method !== "GET") {
       try {

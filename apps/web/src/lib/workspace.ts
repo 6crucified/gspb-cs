@@ -1,7 +1,14 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { isSafeWorkspacePath } from "@/lib/workspace-path";
+import { compactSessionFiles } from "@/lib/workspace-payload";
+import {
+  isIgnoredWorkspacePath,
+  isSafeWorkspacePath,
+  WORKSPACE_TEXT_MAX_BYTES,
+  type WorkspaceFile as WorkspaceFilePath,
+} from "@/lib/workspace-path";
 
-export { isSafeWorkspacePath };
+export { isIgnoredWorkspacePath, isSafeWorkspacePath, WORKSPACE_TEXT_MAX_BYTES };
+export type WorkspaceFile = WorkspaceFilePath;
 
 export type WorkspaceRun = {
   stdout: string;
@@ -59,7 +66,69 @@ export function ensureWorkspaceSchema() {
   return schemaReady;
 }
 
-export type WorkspaceFile = { path: string; text: string };
+const DEFAULT_WORKSPACE_FILES: WorkspaceFile[] = [{ path: "main.py", text: 'print("Bonjour")\n' }];
+
+function normalizeWorkspaceRows(rows: { path: string; text: string }[]) {
+  return rows
+    .map((row) => ({ path: String(row.path), text: String(row.text) }))
+    .filter((file) => isSafeWorkspacePath(file.path) && !isIgnoredWorkspacePath(file.path));
+}
+
+async function readWorkspaceRun(classroomId: string, clerkUserId: string) {
+  const db = await database();
+  return db
+    .prepare(
+      `SELECT stdout, stderr, exit_code, ran_at FROM workspace_runs WHERE classroom_id = ? AND clerk_user_id = ?`,
+    )
+    .bind(classroomId, clerkUserId)
+    .first<{ stdout: string; stderr: string; exit_code: number; ran_at: string }>();
+}
+
+export async function listWorkspacePaths(classroomId: string, clerkUserId: string) {
+  await ensureWorkspaceSchema();
+  const db = await database();
+  const files = await db
+    .prepare(`SELECT path FROM workspace_files WHERE classroom_id = ? AND clerk_user_id = ? ORDER BY path`)
+    .bind(classroomId, clerkUserId)
+    .all<{ path: string }>();
+  const paths = (files.results ?? [])
+    .map((row: { path: string }) => String(row.path))
+    .filter((path: string) => isSafeWorkspacePath(path) && !isIgnoredWorkspacePath(path));
+  return paths.length > 0 ? paths : DEFAULT_WORKSPACE_FILES.map((file) => file.path);
+}
+
+export async function readWorkspaceFiles(classroomId: string, clerkUserId: string, paths: string[]) {
+  const wanted = [...new Set(paths)].filter(
+    (path) => isSafeWorkspacePath(path) && !isIgnoredWorkspacePath(path),
+  );
+  if (wanted.length === 0) return [] as WorkspaceFile[];
+  await ensureWorkspaceSchema();
+  const db = await database();
+  const placeholders = wanted.map(() => "?").join(", ");
+  const rows = await db
+    .prepare(
+      `SELECT path, text FROM workspace_files
+       WHERE classroom_id = ? AND clerk_user_id = ? AND path IN (${placeholders})
+       ORDER BY path`,
+    )
+    .bind(classroomId, clerkUserId, ...wanted)
+    .all<{ path: string; text: string }>();
+  return normalizeWorkspaceRows(rows.results ?? []);
+}
+
+export async function readWorkspaceIndex(classroomId: string, clerkUserId: string) {
+  await ensureWorkspaceSchema();
+  const [paths, run] = await Promise.all([
+    listWorkspacePaths(classroomId, clerkUserId),
+    readWorkspaceRun(classroomId, clerkUserId),
+  ]);
+  return {
+    paths,
+    run: run
+      ? { stdout: run.stdout, stderr: run.stderr, exitCode: Number(run.exit_code), ranAt: run.ran_at }
+      : null,
+  };
+}
 
 export async function readWorkspace(classroomId: string, clerkUserId: string) {
   await ensureWorkspaceSchema();
@@ -71,40 +140,57 @@ export async function readWorkspace(classroomId: string, clerkUserId: string) {
       )
       .bind(classroomId, clerkUserId)
       .all<{ path: string; text: string }>(),
-    db
-      .prepare(
-        `SELECT stdout, stderr, exit_code, ran_at FROM workspace_runs WHERE classroom_id = ? AND clerk_user_id = ?`,
-      )
-      .bind(classroomId, clerkUserId)
-      .first<{ stdout: string; stderr: string; exit_code: number; ran_at: string }>(),
+    readWorkspaceRun(classroomId, clerkUserId),
   ]);
 
-  const stored = (files.results ?? []).map((row: { path: string; text: string }) => ({
-    path: String(row.path),
-    text: String(row.text),
-  }));
+  const stored = normalizeWorkspaceRows(files.results ?? []);
 
   return {
-    files: stored.length > 0 ? stored : [{ path: "main.py", text: 'print("Bonjour")\n' }],
+    files: stored.length > 0 ? stored : DEFAULT_WORKSPACE_FILES,
     run: run
       ? { stdout: run.stdout, stderr: run.stderr, exitCode: Number(run.exit_code), ranAt: run.ran_at }
       : null,
   };
 }
 
-export async function saveWorkspaceFile(classroomId: string, clerkUserId: string, path: string, text: string) {
-  await ensureWorkspaceSchema();
-  const db = await database();
-  await db
-    .prepare(
-      `INSERT INTO workspace_files (classroom_id, clerk_user_id, path, text, updated_at)
+const UPSERT_WORKSPACE_FILE_SQL = `INSERT INTO workspace_files (classroom_id, clerk_user_id, path, text, updated_at)
        VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(classroom_id, clerk_user_id, path) DO UPDATE SET
          text = excluded.text,
-         updated_at = excluded.updated_at`,
-    )
-    .bind(classroomId, clerkUserId, path, text, new Date().toISOString())
-    .run();
+         updated_at = excluded.updated_at`;
+
+export async function saveWorkspaceFile(classroomId: string, clerkUserId: string, path: string, text: string) {
+  await saveWorkspaceFilesBatch(classroomId, clerkUserId, [{ path, text }]);
+}
+
+export async function saveWorkspaceFilesBatch(classroomId: string, clerkUserId: string, files: WorkspaceFile[]) {
+  const stored = files.filter(
+    (file) =>
+      isSafeWorkspacePath(file.path) &&
+      !isIgnoredWorkspacePath(file.path) &&
+      file.text.length <= WORKSPACE_TEXT_MAX_BYTES,
+  );
+  if (stored.length === 0) return;
+  await ensureWorkspaceSchema();
+  const db = await database();
+  const now = new Date().toISOString();
+  const statements = stored.map((file) =>
+    db.prepare(UPSERT_WORKSPACE_FILE_SQL).bind(classroomId, clerkUserId, file.path, file.text, now),
+  );
+  await db.batch(statements);
+}
+
+export async function deleteWorkspaceFilesBatch(classroomId: string, clerkUserId: string, paths: string[]) {
+  const removed = paths.filter((path) => isSafeWorkspacePath(path) && !isIgnoredWorkspacePath(path));
+  if (removed.length === 0) return;
+  await ensureWorkspaceSchema();
+  const db = await database();
+  const statements = removed.map((path) =>
+    db
+      .prepare(`DELETE FROM workspace_files WHERE classroom_id = ? AND clerk_user_id = ? AND path = ?`)
+      .bind(classroomId, clerkUserId, path),
+  );
+  await db.batch(statements);
 }
 
 export async function saveWorkspaceRun(classroomId: string, clerkUserId: string, run: WorkspaceRun) {
@@ -141,7 +227,7 @@ export async function runWorkspace(userId: string, files: WorkspaceFile[], entry
       "Content-Type": "application/json",
       "x-gspb-runner-secret": env.RUNNER_SECRET,
     },
-    body: JSON.stringify({ userId, entry, files }),
+    body: JSON.stringify({ userId, entry, files: compactSessionFiles(files) }),
   });
 
   const payload = (await response.json().catch(() => null)) as {

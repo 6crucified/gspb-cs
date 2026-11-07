@@ -1,8 +1,14 @@
 import { auth } from "@clerk/nextjs/server";
 import { isClassroomTeacher } from "@/lib/assignments";
 import { getClassroomForUser } from "@/lib/classrooms";
+import { readJsonBody, payloadTooLarge } from "@/lib/request-payload";
+import {
+  filterWorkspaceFiles,
+  workspaceContentFiles,
+  workspaceFolderMarkers,
+} from "@/lib/workspace-sync-filter";
 import { bumpWorkspaceRev, getWorkspaceRev } from "@/lib/workspace-meta";
-import { isSafeWorkspacePath, readWorkspace, saveWorkspaceFile, type WorkspaceFile } from "@/lib/workspace";
+import { listWorkspacePaths, readWorkspaceFiles, saveWorkspaceFilesBatch, type WorkspaceFile } from "@/lib/workspace";
 
 async function assertWorkspaceAccess(classroomId: string, ownerId: string, userId: string) {
   const classroom = await getClassroomForUser(classroomId, userId);
@@ -23,24 +29,32 @@ export async function GET(request: Request) {
   const classroomId = url.searchParams.get("classroomId") ?? "";
   const ownerId = url.searchParams.get("ownerId") ?? "";
   const clientRev = Number(url.searchParams.get("rev") ?? "0");
+  const includeContent = url.searchParams.get("content") === "1";
   if (!classroomId || !ownerId) return Response.json({ error: "Requête invalide." }, { status: 400 });
   if (!(await assertWorkspaceAccess(classroomId, ownerId, userId))) {
     return Response.json({ error: "Accès refusé." }, { status: 403 });
   }
   const rev = await getWorkspaceRev(classroomId, ownerId);
   if (rev <= clientRev) return Response.json({ unchanged: true, rev });
-  const workspace = await readWorkspace(classroomId, ownerId);
-  return Response.json({ rev, files: workspace.files });
+  const paths = await listWorkspacePaths(classroomId, ownerId);
+  if (!includeContent) return Response.json({ rev, paths });
+  const files = await readWorkspaceFiles(classroomId, ownerId, paths);
+  return Response.json({ rev, paths, files });
 }
 
 export async function POST(request: Request) {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "Connexion requise." }, { status: 401 });
-  const body = (await request.json().catch(() => null)) as {
+  const blocked = payloadTooLarge(request);
+  if (blocked) return blocked;
+
+  const body = await readJsonBody<{
     classroomId?: string;
     ownerId?: string;
     files?: WorkspaceFile[];
-  } | null;
+  }>(request);
+  if (body instanceof Response) return body;
+
   const classroomId = body?.classroomId ?? "";
   const ownerId = body?.ownerId ?? "";
   if (!classroomId || !ownerId || !body?.files) return Response.json({ error: "Requête invalide." }, { status: 400 });
@@ -48,11 +62,9 @@ export async function POST(request: Request) {
     return Response.json({ error: "Accès refusé." }, { status: 403 });
   }
 
-  const stored = body.files.filter((file) => isSafeWorkspacePath(file.path) && file.text.length <= 100_000);
-  for (const file of stored) {
-    if (file.path.endsWith("/.folder") || file.path === ".folder") continue;
-    await saveWorkspaceFile(classroomId, ownerId, file.path, file.text);
-  }
+  const stored = filterWorkspaceFiles(body.files);
+  const toWrite = [...workspaceContentFiles(stored), ...workspaceFolderMarkers(stored)];
+  await saveWorkspaceFilesBatch(classroomId, ownerId, toWrite);
   const rev = await bumpWorkspaceRev(classroomId, ownerId);
   return Response.json({ ok: true, rev });
 }

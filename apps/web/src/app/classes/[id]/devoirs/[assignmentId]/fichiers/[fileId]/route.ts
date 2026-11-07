@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { attachmentDisposition } from "@/lib/assignment-files";
 import { readAssignmentFile } from "@/lib/assignments";
+import { responseBodyFromBytes } from "@/lib/byte-stream";
 
 type Params = { id: string; assignmentId: string; fileId: string };
 
@@ -19,10 +20,7 @@ export async function GET(_request: Request, context: { params: Promise<Params> 
   });
   if (!file) return new Response("Introuvable", { status: 404 });
 
-  const body = new ArrayBuffer(file.bytes.byteLength);
-  new Uint8Array(body).set(file.bytes);
-
-  return new Response(body, {
+  return new Response(responseBodyFromBytes(file.bytes), {
     headers: {
       "Content-Type": file.contentType,
       "Content-Length": String(file.size),

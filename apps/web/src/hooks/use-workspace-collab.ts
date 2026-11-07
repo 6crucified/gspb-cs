@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
 import type { RemotePeerState } from "@/lib/codemirror-remote-peer";
+import { chunkPaths } from "@/lib/workspace-payload";
 import type { WorkspaceFile } from "@/lib/workspace";
 import type { WorkspaceCursor } from "@/lib/workspace-presence";
 
@@ -13,10 +14,29 @@ type SelectionPayload = {
   headCol: number;
 };
 
+async function fetchWorkspaceFiles(classroomId: string, ownerId: string, paths: string[]) {
+  if (paths.length === 0) return [] as WorkspaceFile[];
+  const batches = chunkPaths(paths);
+  const merged: WorkspaceFile[] = [];
+  for (const batch of batches) {
+    const params = new URLSearchParams({
+      classroomId,
+      ownerId,
+      paths: batch.join(","),
+    });
+    const response = await fetch(`/api/workspace/files?${params}`);
+    if (!response.ok) continue;
+    const payload = (await response.json()) as { files?: WorkspaceFile[] };
+    if (payload.files?.length) merged.push(...payload.files);
+  }
+  return merged;
+}
+
 export function useWorkspaceCollab({
   classroomId,
   ownerId,
   filesRef,
+  dirtyPathsRef,
   filesRev,
   setFilesRev,
   setFiles,
@@ -27,6 +47,7 @@ export function useWorkspaceCollab({
   classroomId: string;
   ownerId: string;
   filesRef: MutableRefObject<WorkspaceFile[]>;
+  dirtyPathsRef: MutableRefObject<Set<string>>;
   filesRev: number;
   setFilesRev: (rev: number) => void;
   setFiles: React.Dispatch<React.SetStateAction<WorkspaceFile[]>>;
@@ -57,17 +78,24 @@ export function useWorkspaceCollab({
     window.clearTimeout(saveTimerRef.current);
     saveTimerRef.current = window.setTimeout(() => {
       void (async () => {
+        const dirty = [...dirtyPathsRef.current];
+        if (dirty.length === 0) return;
+        const byPath = new Map(filesRef.current.map((file) => [file.path, file]));
+        const payloadFiles = dirty.map((path) => byPath.get(path)).filter(Boolean) as WorkspaceFile[];
+        if (payloadFiles.length === 0) return;
+
         const response = await fetch("/api/workspace/sync", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ classroomId, ownerId, files: filesRef.current }),
+          body: JSON.stringify({ classroomId, ownerId, files: payloadFiles }),
         });
         if (!response.ok) return;
-        const payload = (await response.json()) as { rev?: number };
-        if (typeof payload.rev === "number") setFilesRev(payload.rev);
+        const body = (await response.json()) as { rev?: number };
+        if (typeof body.rev === "number") setFilesRev(body.rev);
+        for (const path of dirty) dirtyPathsRef.current.delete(path);
       })();
     }, 650);
-  }, [classroomId, filesRef, ownerId, setFilesRev]);
+  }, [classroomId, dirtyPathsRef, filesRef, ownerId, setFilesRev]);
 
   const selectionTimerRef = useRef(0);
   const reportSelection = useCallback(
@@ -135,9 +163,20 @@ export function useWorkspaceCollab({
           });
           const syncRes = await fetch(`/api/workspace/sync?${syncQuery}`);
           if (syncRes.ok) {
-            const sync = (await syncRes.json()) as { unchanged?: boolean; rev?: number; files?: WorkspaceFile[] };
-            if (!sync.unchanged && sync.files) {
-              setFiles(sync.files);
+            const sync = (await syncRes.json()) as { unchanged?: boolean; rev?: number; paths?: string[] };
+            if (!sync.unchanged && sync.paths) {
+              const remoteFiles = await fetchWorkspaceFiles(classroomId, ownerId, sync.paths);
+              const contentByPath = new Map(
+                remoteFiles
+                  .filter((file) => file.path !== ".folder" && !file.path.endsWith("/.folder"))
+                  .map((file) => [file.path, file.text] as const),
+              );
+              setFiles(
+                sync.paths.map((path) => ({
+                  path,
+                  text: contentByPath.get(path) ?? (path.endsWith("/.folder") || path === ".folder" ? "" : ""),
+                })),
+              );
               if (typeof sync.rev === "number") setFilesRev(sync.rev);
             }
           }

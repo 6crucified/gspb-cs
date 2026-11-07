@@ -1,11 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 
 function frontendApiOrigin() {
   const key = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
   const encoded = key.replace(/^pk_(test|live)_/, "");
-  const decoded = Buffer.from(encoded, "base64").toString("utf8").replace(/\$$/, "");
+  const decoded = atob(encoded).replace(/\$$/, "");
   if (!decoded.includes(".")) {
     throw new Error("Clerk publishable key is missing.");
   }

@@ -1,7 +1,20 @@
 import { auth } from "@clerk/nextjs/server";
 import { isClassroomTeacher } from "@/lib/assignments";
 import { getClassroomForUser } from "@/lib/classrooms";
-import { callSession, deleteWorkspaceFile, isSafeWorkspacePath, saveWorkspaceFile, type WorkspaceFile } from "@/lib/workspace";
+import { readJsonBody, payloadTooLarge } from "@/lib/request-payload";
+import {
+  filterWorkspaceFiles,
+  workspaceContentFiles,
+  workspaceFolderMarkers,
+} from "@/lib/workspace-sync-filter";
+import { compactSessionFiles } from "@/lib/workspace-payload";
+import { isIgnoredWorkspacePath, isSafeWorkspacePath } from "@/lib/workspace-path";
+import {
+  callSession,
+  deleteWorkspaceFilesBatch,
+  saveWorkspaceFilesBatch,
+  type WorkspaceFile,
+} from "@/lib/workspace";
 
 async function targetUser(viewerId: string, classroomId: string, studentId: string | undefined) {
   const classroom = await getClassroomForUser(classroomId, viewerId);
@@ -26,7 +39,10 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const { userId } = await auth();
   if (!userId) return Response.json({ error: "Connexion requise." }, { status: 401 });
-  const body = (await request.json().catch(() => null)) as {
+  const blocked = payloadTooLarge(request);
+  if (blocked) return blocked;
+
+  const body = await readJsonBody<{
     op?: string;
     classroomId?: string;
     ownerId?: string;
@@ -35,20 +51,24 @@ export async function POST(request: Request) {
     data?: string;
     session?: string;
     removed?: string[];
-  } | null;
+  }>(request);
+  if (body instanceof Response) return body;
+
   if (!body?.classroomId || !body.op) return Response.json({ error: "Requête invalide." }, { status: 400 });
   const target = await targetUser(userId, body.classroomId, body.ownerId);
   if (!target) return Response.json({ error: "Accès refusé." }, { status: 403 });
   if (target.readOnly && body.op !== "output") return Response.json({ error: "Lecture seule." }, { status: 403 });
 
   const sessionId = body.session === "2" || body.session === "3" ? body.session : "1";
-  const stored = (body.files ?? []).filter((file) => isSafeWorkspacePath(file.path) && file.text.length <= 100_000);
-  const files = stored.filter((file) => !file.path.endsWith("/.folder") && file.path !== ".folder");
-  const markers = stored.filter((file) => file.path.endsWith("/.folder") || file.path === ".folder");
-  const removed = (body.removed ?? []).filter((path) => isSafeWorkspacePath(path));
+  const stored = filterWorkspaceFiles(body.files);
+  const files = compactSessionFiles(workspaceContentFiles(stored));
+  const markers = workspaceFolderMarkers(stored);
+  const removed = (body.removed ?? []).filter((path) => isSafeWorkspacePath(path) && !isIgnoredWorkspacePath(path));
   if (body.op === "open" || body.op === "run" || body.op === "move") {
-    for (const path of removed) await deleteWorkspaceFile(target.classroomId, target.userId, path);
-    for (const file of [...files, ...markers]) await saveWorkspaceFile(target.classroomId, target.userId, file.path, file.text);
+    await Promise.all([
+      deleteWorkspaceFilesBatch(target.classroomId, target.userId, removed),
+      saveWorkspaceFilesBatch(target.classroomId, target.userId, [...files, ...markers]),
+    ]);
   }
 
   if (body.op === "input") {
