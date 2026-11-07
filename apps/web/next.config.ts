@@ -19,10 +19,19 @@ const nextConfig: NextConfig = {
   },
 };
 
+const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN;
+
 export default withSentryConfig(nextConfig, {
   org: "gspb",
   project: "gspb-web",
+  authToken: sentryAuthToken,
   silent: !process.env.CI,
   widenClientFileUpload: true,
   tunnelRoute: "/monitoring",
+  ...(sentryAuthToken
+    ? {}
+    : {
+        disableServerWebpackPlugin: true,
+        disableClientWebpackPlugin: true,
+      }),
 });

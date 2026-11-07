@@ -7,7 +7,9 @@
   },
   "scripts": {
     "dev": "turbo dev",
-    "build": "turbo build",
+    "build": "node scripts/build.mjs",
+    "deploy": "pnpm --filter @gspb-cs/web exec wrangler deploy",
+    "cf:build": "pnpm --filter @gspb-cs/web build:cf",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "db:generate": "pnpm --filter @gspb-cs/database db:generate",
